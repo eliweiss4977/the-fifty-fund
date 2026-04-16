@@ -738,7 +738,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Agent Uptime</div>
-        <div class="stat-value" id="uptimeDays">Day 1</div>
+        <div class="stat-value" id="uptimeDays">DAY 1</div>
         <div class="stat-sub" id="startDate">Since --</div>
       </div>
     </div>
@@ -1055,15 +1055,10 @@
       document.getElementById('totalTrades').nextElementSibling.textContent =
         'Win Rate: ' + winRateStr;
 
-      // Agent Uptime
-      if (data.start_date) {
-        const start   = new Date(data.start_date + 'T00:00:00');
-        const today   = new Date();
-        const dayNum  = Math.max(1, Math.floor((today - start) / 86400000) + 1);
-        document.getElementById('uptimeDays').textContent = 'Day ' + dayNum;
-        document.getElementById('startDate').textContent =
-          'Since ' + start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      }
+      // Agent Uptime — calculated from hardcoded launch date
+      const dayNum = Math.floor((Date.now() - new Date('2026-04-15').getTime()) / 86400000) + 1;
+      document.getElementById('uptimeDays').textContent = 'DAY ' + dayNum;
+      document.getElementById('startDate').textContent  = 'Since Apr 15, 2026';
 
       // ── 2. TRADE JOURNAL ──────────────────────────────────────────────
 
