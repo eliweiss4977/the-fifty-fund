@@ -18,7 +18,7 @@ The AI speaks in first person. It explains what it saw, why it acted, and what i
 - **Brain:** Claude AI (Anthropic) — makes every trade decision
 - **Broker:** Alpaca — executes real trades, supports fractional shares
 - **Alerts:** Telegram — real-time trade notifications
-- **Social:** X (@TheFiftyFund) — auto-posts every decision
+- **Social:** X (@TheFund7222) — auto-posts every decision
 - **Blog:** Substack — weekly reviews, monthly deep dives, milestone posts
 - **Cloud:** GitHub Codespaces — runs 24/7, no local machine needed
 
