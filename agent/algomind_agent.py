@@ -16,7 +16,7 @@ import logging
 import os
 import smtplib
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -25,7 +25,9 @@ import alpaca_trade_api as tradeapi
 import numpy as np
 import pytz
 import requests
-import yfinance as yf
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockBarsRequest
+from alpaca.data.timeframe import TimeFrame
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -70,14 +72,16 @@ alpaca = tradeapi.REST(
     api_version="v2",
 )
 claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+_stock_client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
 
 
 # ── Market Data ───────────────────────────────────────────────────────────────
 
 def fetch_market_data(tickers: list) -> dict:
     """
-    Download 30 days of daily OHLCV data for each ticker via yfinance and
-    compute RSI-14, 1-day price-change %, and today's volume.
+    Download 30 days of daily OHLCV data for each ticker via Alpaca's
+    StockHistoricalDataClient and compute RSI-14, 1-day price-change %, and
+    today's volume.
 
     Returns:
         {
@@ -90,18 +94,31 @@ def fetch_market_data(tickers: list) -> dict:
           ...
         }
     """
+    start = datetime.now(ET_ZONE).date() - timedelta(days=35)
+    request = StockBarsRequest(
+        symbol_or_symbols=tickers,
+        timeframe=TimeFrame.Day,
+        start=start,
+    )
+
+    try:
+        bars_response = _stock_client.get_stock_bars(request)
+    except Exception as exc:
+        logger.error("Alpaca bars request failed: %s", exc)
+        return {}
+
     data = {}
     for ticker in tickers:
         try:
-            hist = yf.Ticker(ticker).history(period="30d")
-            if hist.empty or len(hist) < 2:
+            bars = bars_response[ticker]
+            if not bars or len(bars) < 2:
                 logger.warning("Insufficient history for %s — skipping.", ticker)
                 continue
 
-            closes = hist["Close"].values.astype(float)
+            closes     = np.array([b.close for b in bars], dtype=float)
             price      = closes[-1]
             change_pct = (price - closes[-2]) / closes[-2] * 100
-            volume     = int(hist["Volume"].values[-1])
+            volume     = int(bars[-1].volume)
             rsi        = _calc_rsi(closes, period=14)
 
             data[ticker] = {

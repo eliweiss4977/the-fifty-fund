@@ -1,4 +1,5 @@
 alpaca-trade-api==3.0.2
+alpaca-py>=0.20.0
 anthropic>=0.25.0
 schedule==1.2.1
 yfinance==0.2.36
