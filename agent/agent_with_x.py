@@ -16,7 +16,9 @@ Scheduler (all times ET):
   - 1st of each month                  → Substack monthly deep dive
 """
 
+import json
 import logging
+import os
 import time
 from datetime import datetime, date
 
@@ -55,6 +57,25 @@ _state = {
 }
 
 CYCLE_INTERVAL_SECONDS = 30 * 60   # 30 minutes
+
+
+# ── Persistent State Helpers ──────────────────────────────────────────────────
+
+def _load_persistent_state() -> dict:
+    """
+    Read last_cycle_utc and last_outlook_date from docs/data.json.
+    These fields survive Railway redeploys (they live in the git-tracked file).
+    Returns safe defaults on any error so startup always continues normally.
+    """
+    result: dict = {"last_cycle_utc": None, "last_outlook_date": None}
+    try:
+        with open(agent._DATA_JSON_PATH) as fh:
+            data = json.load(fh)
+        result["last_cycle_utc"]    = data.get("last_cycle_utc")
+        result["last_outlook_date"] = data.get("last_outlook_date")
+    except Exception as exc:
+        logger.warning("Could not load persistent state from data.json: %s", exc)
+    return result
 
 
 # ── Unified Run Cycle ─────────────────────────────────────────────────────────
@@ -184,6 +205,15 @@ def run_cycle() -> None:
         agent.send_telegram(f"⚠️ AlgoMind run_cycle error:\n{exc}")
 
     finally:
+        # ── Persist cycle timestamp (must happen before the push) ─────────────
+        try:
+            agent._update_agent_state(
+                "last_cycle_utc",
+                datetime.now(ET_ZONE).isoformat(),
+            )
+        except Exception:
+            pass
+
         # ── One push per cycle max (if data.json was modified) ───────────────
         if agent._dashboard_dirty:
             try:
@@ -208,6 +238,11 @@ def _handle_morning_outlook(market_data: dict) -> None:
             f"Morning outlook posted to X: {(tweet or '')[:100]}",
             ["x-post", "morning-outlook"],
         )
+    except Exception:
+        pass
+    # Persist so redeploys don't re-post the outlook today
+    try:
+        agent._update_agent_state("last_outlook_date", today.isoformat())
     except Exception:
         pass
 
@@ -259,6 +294,31 @@ def start() -> None:
         "🤖 *The Fifty Fund* is online.\n"
         "AlgoMind is scanning the market. First cycle begins at next 30-min mark."
     )
+
+    # ── Seed in-memory state from data.json to survive redeploys ─────────────
+    _pstate = _load_persistent_state()
+
+    if _pstate["last_cycle_utc"]:
+        try:
+            last_dt = datetime.fromisoformat(_pstate["last_cycle_utc"])
+            if last_dt.tzinfo is None:
+                last_dt = ET_ZONE.localize(last_dt)
+            _state["last_cycle_dt"] = last_dt
+            logger.info("Startup: last cycle was %s — duplicate-cycle guard active.", last_dt)
+        except Exception as exc:
+            logger.warning("Could not parse last_cycle_utc on startup: %s", exc)
+
+    if _pstate["last_outlook_date"]:
+        try:
+            _state["morning_outlook_posted"].add(
+                date.fromisoformat(_pstate["last_outlook_date"])
+            )
+            logger.info(
+                "Startup: morning outlook already posted %s — will skip today.",
+                _pstate["last_outlook_date"],
+            )
+        except Exception as exc:
+            logger.warning("Could not parse last_outlook_date on startup: %s", exc)
 
     while True:
         now_et = datetime.now(ET_ZONE)

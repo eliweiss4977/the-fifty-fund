@@ -715,6 +715,34 @@ def append_ai_log(message: str, tags: list) -> None:
         logger.warning("append_ai_log failed (non-fatal): %s", exc)
 
 
+def _update_agent_state(key: str, value: str) -> None:
+    """
+    Update a single agent-state field in docs/data.json without disturbing
+    any other data.  Marks the dashboard dirty so the value is included in
+    the next cycle-end push to GitHub.
+
+    Used to persist last_cycle_utc and last_outlook_date across Railway
+    redeploys so the agent does not spam duplicate tweets on restart.
+
+    Never raises — must not break the agent.
+    """
+    global _dashboard_dirty
+    try:
+        if not os.path.exists(_DATA_JSON_PATH):
+            return
+        try:
+            with open(_DATA_JSON_PATH) as fh:
+                data = json.load(fh)
+        except (json.JSONDecodeError, OSError):
+            return
+        data[key] = value
+        with open(_DATA_JSON_PATH, "w") as fh:
+            json.dump(data, fh, indent=2)
+        _dashboard_dirty = True
+    except Exception as exc:
+        logger.warning("_update_agent_state(%s) failed (non-fatal): %s", key, exc)
+
+
 # ── Core Trade Cycle ──────────────────────────────────────────────────────────
 
 def run_trade_cycle() -> dict | None:
