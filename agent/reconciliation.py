@@ -47,7 +47,6 @@ _alpaca = tradeapi.REST(
     api_version="v2",
 )
 
-_LEDGER_PATH = Path(__file__).resolve().parent.parent / "data" / "ledger.jsonl"
 
 
 # ── Alpaca fetch ───────────────────────────────────────────────────────────────
@@ -85,10 +84,10 @@ def _fetch_from_alpaca() -> tuple[dict, object]:
 
 def _last_snapshot() -> dict | None:
     """Return the portfolio payload from the most-recent RECONCILIATION ledger event."""
-    if not _LEDGER_PATH.exists():
+    if not _ledger.LEDGER_PATH.exists():
         return None
     last = None
-    with open(_LEDGER_PATH, encoding="utf-8") as fh:
+    with open(_ledger.LEDGER_PATH, encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
             if not line:
@@ -140,22 +139,21 @@ def _compute_drift(prev: dict, curr: dict) -> dict:
     return drift
 
 
-# ── Main entry point ───────────────────────────────────────────────────────────
+# ── Core reconciliation (single Alpaca round-trip) ────────────────────────────
 
-def get_reconciled_portfolio() -> dict:
+def _reconcile() -> tuple[dict, object]:
     """
-    Fetch the authoritative live portfolio state from Alpaca, compare it
-    against the last recorded reconciliation snapshot, and log a
-    RECONCILIATION event noting any drift.
+    Fetch portfolio + account from Alpaca, compare against last ledger snapshot,
+    log a RECONCILIATION event, and return (portfolio_dict, account_object).
 
-    Returns the canonical portfolio dict on success, or a zero-value
-    fallback on Alpaca error (so callers never crash).
+    account_object is the raw Alpaca account (has daytrade_count etc.).
+    Returns a zero-value portfolio and None account on Alpaca error.
     """
     try:
-        current, _ = _fetch_from_alpaca()
+        current, account = _fetch_from_alpaca()
     except Exception as exc:
         logger.error("Reconciliation: Alpaca fetch failed — %s", exc)
-        return {"cash": 0.0, "portfolio_value": 0.0, "positions": []}
+        return {"cash": 0.0, "portfolio_value": 0.0, "positions": []}, None
 
     prev      = _last_snapshot()
     drift     = _compute_drift(prev, current) if prev else {}
@@ -172,16 +170,29 @@ def get_reconciled_portfolio() -> dict:
         _ledger.log_event(
             _ledger.generate_cycle_id(),
             _ledger.RECONCILIATION,
-            {
-                "current":   current,
-                "drift":     drift,
-                "has_drift": has_drift,
-            },
+            {"current": current, "drift": drift, "has_drift": has_drift},
         )
     except Exception as exc:
         logger.warning("Could not write RECONCILIATION event to ledger: %s", exc)
 
-    return current
+    return current, account
+
+
+# ── Public entry points ────────────────────────────────────────────────────────
+
+def get_reconciled_portfolio() -> dict:
+    """Reconcile and return the portfolio dict. Never raises."""
+    portfolio, _ = _reconcile()
+    return portfolio
+
+
+def get_portfolio_and_account() -> tuple[dict, object]:
+    """
+    Reconcile and return (portfolio_dict, account_object) in one Alpaca
+    round-trip. Use this at cycle start to avoid a redundant get_account() call.
+    account_object is None when Alpaca is unavailable.
+    """
+    return _reconcile()
 
 
 def get_alpaca_account():
@@ -230,7 +241,7 @@ if __name__ == "__main__":
             print(f"\nDay trade count : {getattr(account, 'daytrade_count', 'n/a')}")
             print(f"Account status  : {getattr(account, 'status', 'n/a')}")
 
-        print(f"\nRECONCILIATION event logged to {_LEDGER_PATH}")
+        print(f"\nRECONCILIATION event logged to {_ledger.LEDGER_PATH}")
 
     print("\nSelf-test complete.")
     sys.exit(0)

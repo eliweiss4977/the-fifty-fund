@@ -21,7 +21,8 @@ from typing import Any
 
 _REPO_ROOT   = Path(__file__).resolve().parent.parent
 _DATA_DIR    = _REPO_ROOT / "data"
-_LEDGER_PATH = _DATA_DIR / "ledger.jsonl"
+LEDGER_PATH  = _DATA_DIR / "ledger.jsonl"   # public — import this in other modules
+_LEDGER_PATH = LEDGER_PATH                   # internal alias
 
 # ── Event type constants ───────────────────────────────────────────────────────
 
