@@ -262,6 +262,72 @@ REQUIRED RESPONSE FORMAT
     return decision
 
 
+# ── Pre-Trade Guardrails ──────────────────────────────────────────────────────
+
+def check_pdt_safe() -> tuple[bool, str]:
+    """
+    Return (False, reason) if the account already has 3 or more day trades in
+    the rolling 5-business-day window — which would trigger PDT lock on a cash
+    account.  Otherwise (True, "ok").
+    """
+    account = alpaca.get_account()
+    count = int(getattr(account, "daytrade_count", 0))
+    if count >= 3:
+        return False, f"PDT limit reached ({count} day trades in window)"
+    return True, "ok"
+
+
+def validate_decision(decision: dict, portfolio: dict) -> tuple[bool, str]:
+    """
+    Enforce hard pre-trade guardrails before any order reaches Alpaca.
+
+    Returns (is_valid, reason).
+    """
+    action = (decision.get("action") or "HOLD").upper()
+    ticker = decision.get("ticker")
+
+    if action == "HOLD":
+        return True, "hold"
+
+    if not ticker:
+        return False, "no ticker provided"
+
+    cash            = portfolio["cash"]
+    portfolio_value = portfolio["portfolio_value"]
+    positions       = portfolio.get("positions", {})
+
+    if action == "BUY":
+        dollar_amount = float(decision.get("dollar_amount") or 0)
+        if dollar_amount < 1.00:
+            return False, f"dollar_amount ${dollar_amount:.2f} below Alpaca minimum ($1.00)"
+        if cash - dollar_amount < CASH_BUFFER:
+            return False, (
+                f"insufficient cash: ${cash:.2f} - ${dollar_amount:.2f} "
+                f"would breach ${CASH_BUFFER:.2f} buffer"
+            )
+        existing_mv = positions.get(ticker, {}).get("market_value", 0.0)
+        if existing_mv + dollar_amount > portfolio_value * MAX_POSITION_PCT:
+            return False, (
+                f"position concentration: existing ${existing_mv:.2f} + "
+                f"${dollar_amount:.2f} would exceed "
+                f"{int(MAX_POSITION_PCT * 100)}% of ${portfolio_value:.2f}"
+            )
+
+    elif action == "SELL":
+        qty = float(decision.get("qty") or 0)
+        if qty <= 0:
+            return False, f"qty {qty} must be > 0"
+        held_qty = positions.get(ticker, {}).get("qty", 0.0)
+        if qty > held_qty:
+            return False, f"qty {qty} exceeds held qty {held_qty} for {ticker}"
+
+    pdt_ok, pdt_reason = check_pdt_safe()
+    if not pdt_ok:
+        return False, pdt_reason
+
+    return True, "ok"
+
+
 # ── Trade Execution ───────────────────────────────────────────────────────────
 
 def execute_trade(decision: dict) -> str:
@@ -277,6 +343,12 @@ def execute_trade(decision: dict) -> str:
 
     if action == "HOLD" or not ticker:
         return f"HOLD — {reason}"
+
+    portfolio = get_portfolio()
+    is_valid, validation_reason = validate_decision(decision, portfolio)
+    if not is_valid:
+        logger.warning("Trade rejected by guardrails: %s", validation_reason)
+        return f"REJECTED ({action} {ticker}) — {validation_reason}"
 
     try:
         if action == "BUY":
