@@ -203,6 +203,80 @@ else:
 
 ---
 
+## April 16, 2026 — Session 7 (Ledger)
+
+See above — ledger system, data/ directory, event types.
+
+---
+
+## April 16, 2026 — Session 8
+
+### What Was Built Today
+| File | Description | Status |
+|------|-------------|--------|
+| `agent/risk_engine.py` | Pure deterministic pre-trade guardrails — 7 rules, validate_trade() API, logs to ledger | ✅ Complete |
+| `agent/reconciliation.py` | Single source of portfolio truth — fetches from Alpaca, detects drift, logs RECONCILIATION event | ✅ Complete |
+| `agent/ledger.py` | Added `RECONCILIATION` event type constant | ✅ Complete |
+
+### Risk Engine — `agent/risk_engine.py`
+
+**Entry point:** `validate_trade(decision, portfolio, account, ledger_path) → (bool, str)`
+
+**7 rules checked in order (first failure wins):**
+
+| Rule | What it checks |
+|------|----------------|
+| `MIN_ORDER_VALUE` | BUY dollar_amount ≥ $1.00 |
+| `CASH_BUFFER` | After BUY, cash remaining ≥ $2.00 |
+| `MAX_POSITION_PCT` | Resulting position ≤ 30% of portfolio value |
+| `POSITION_EXISTS` | SELL requires an existing position with qty > 0 |
+| `PDT_SAFE` | Alpaca daytrade_count < 3 |
+| `MAX_TRADES_PER_DAY` | ORDER_SUBMITTED ledger events today < 3 |
+| `NO_DUPLICATE_ORDER` | No ORDER_SUBMITTED for same ticker in last 15 minutes |
+
+- Logs a `DECISION_VALIDATED` event to the ledger on every call
+- Uses `decision.get("cycle_id")` if present so the event ties to the right cycle
+- Accepts `account=None` and `ledger_path=None` to skip the respective checks (useful in tests)
+- `positions` field supports both list-of-dicts (reconciliation format) and symbol-keyed dict (legacy algomind format)
+- **Self-test:** `python agent/risk_engine.py` — 11 cases, all passing
+
+### Reconciliation — `agent/reconciliation.py`
+
+**Entry point:** `get_reconciled_portfolio() → dict`
+
+Returns: `{cash, portfolio_value, positions: [{symbol, qty, market_value, avg_entry}]}`
+
+**What it does:**
+1. Fetches live account + positions from Alpaca
+2. Reads the last `RECONCILIATION` event from `data/ledger.jsonl`
+3. Computes drift (portfolio_value_delta, cash_delta, positions_added/removed, qty_changes)
+4. Logs a `RECONCILIATION` event with `{current, drift, has_drift}`
+5. Returns the live snapshot (never raises — returns zero-value fallback on Alpaca error)
+
+**`get_alpaca_account()`** — separate helper for fetching the raw Alpaca account object (used by risk engine for `daytrade_count` PDT check).
+
+**Self-test:** `python agent/reconciliation.py` — connects to Alpaca and prints live state.
+
+### Positions Format Change
+`reconciliation.get_reconciled_portfolio()` returns `positions` as a **list** (not a dict):
+```python
+[{"symbol": "NVDA", "qty": 0.05, "market_value": 5.00, "avg_entry": 100.0}]
+```
+This is intentional — more explicit than a symbol-keyed dict. `risk_engine.validate_trade()` handles both formats for backward compatibility.
+
+### How risk_engine + reconciliation wire into run_cycle() (not yet done)
+When integrating, the call order at cycle start should be:
+```python
+portfolio = reconciliation.get_reconciled_portfolio()
+account   = reconciliation.get_alpaca_account()
+decision  = agent.ask_claude(market_data, portfolio)
+ok, reason = risk_engine.validate_trade(decision, portfolio, account, LEDGER_PATH)
+if not ok:
+    # skip execution
+```
+
+---
+
 ## April 16, 2026 — Session 7
 
 ### What Was Built Today
