@@ -2,7 +2,7 @@
 substack_engine.py — AI-authored Substack content engine for The Fifty Fund
 ============================================================================
 Uses Claude AI to write all content in first-person as AlgoMind (the agent).
-Authenticates to Substack using the SUBSTACK_LLI JWT token cookie.
+Publishes posts by emailing them to thefiftyfund@substack.com via Gmail SMTP.
 Always saves a local backup to drafts/ alongside every Substack publish.
 
 Publishing schedule (enforced by agent_with_x.py scheduler):
@@ -15,12 +15,13 @@ All API credentials are loaded from environment variables / .env file.
 
 import logging
 import os
+import smtplib
 import sys
 from datetime import datetime
+from email.mime.text import MIMEText
 from pathlib import Path
 
 import anthropic
-import requests
 import yfinance as yf
 from dotenv import load_dotenv
 
@@ -30,9 +31,10 @@ logger = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-SUBSTACK_LLI      = os.getenv("SUBSTACK_LLI", "")   # value of substack.lli JWT token cookie
-SUBSTACK_PUB      = os.getenv("SUBSTACK_PUB", "thefiftyfund")
+ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")
+GMAIL_EMAIL        = os.getenv("GMAIL_EMAIL", "")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
+SUBSTACK_EMAIL     = "thefiftyfund@substack.com"
 
 CLAUDE_MODEL  = "claude-sonnet-4-20250514"
 STARTING_CASH = 50.00
@@ -46,28 +48,33 @@ DRAFTS_DIR.mkdir(exist_ok=True)
 claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
-def _get_substack_session() -> requests.Session:
-    """Return a requests.Session authenticated with the Substack JWT token cookie."""
-    session = requests.Session()
-    session.cookies.set('substack.lli', os.environ['SUBSTACK_LLI'], domain='.substack.com')
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Referer': 'https://substack.com/',
-        'Origin': 'https://substack.com',
-        'Connection': 'keep-alive',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
-        'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'Content-Type': 'application/json',
-        'Cookie': f'substack.lli={os.environ["SUBSTACK_LLI"]}',
-    })
-    return session
+# ── Gmail SMTP Publisher ──────────────────────────────────────────────────────
+
+def _send_to_substack(title: str, body: str) -> bool:
+    """
+    Email a post to the Substack draft address via Gmail SMTP.
+
+    Substack accepts posts emailed to <publication>@substack.com and
+    places them in Drafts automatically.
+
+    Returns True on success, False otherwise.
+    """
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = title
+    msg["From"]    = GMAIL_EMAIL
+    msg["To"]      = SUBSTACK_EMAIL
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.login(GMAIL_EMAIL, GMAIL_APP_PASSWORD)
+            smtp.sendmail(GMAIL_EMAIL, SUBSTACK_EMAIL, msg.as_string())
+        logger.info("Post emailed to Substack: %s", title)
+        return True
+    except smtplib.SMTPException as exc:
+        logger.error("Gmail SMTP error: %s", exc)
+        return False
 
 
 # ── Claude Content Generation ─────────────────────────────────────────────────
@@ -299,77 +306,15 @@ Return ONLY the post body (no title line, no front matter)."""
 
 def _publish_and_save(title: str, body: str, post_type: str) -> None:
     """
-    Always save a local backup to drafts/, then publish to Substack if configured.
+    Always save a local backup to drafts/, then email to Substack if configured.
     The local backup is written first so it exists even if publishing fails.
     """
     _save_draft_locally(title, body, post_type)
 
-    if SUBSTACK_LLI and SUBSTACK_PUB:
-        _publish_to_substack(title, body)
+    if GMAIL_EMAIL and GMAIL_APP_PASSWORD:
+        _send_to_substack(title, body)
     else:
-        logger.info("SUBSTACK_LLI not set — post saved locally only.")
-
-
-def _publish_to_substack(title: str, body: str) -> bool:
-    """
-    Create a draft on Substack then immediately publish it.
-
-    Uses session cookie auth (SUBSTACK_LLI env var):
-      1. POST https://substack.com/api/v1/posts  → creates draft, returns post id
-      2. PUT  https://substack.com/api/v1/posts/{id}/publish  → publishes it
-
-    Returns True on success, False otherwise.
-    """
-    session = _get_substack_session()
-
-    # Convert Markdown body to minimal HTML for Substack's editor
-    html_body = "\n".join(
-        f"<p>{line}</p>" if line.strip() else "<p><br/></p>"
-        for line in body.split("\n")
-    )
-
-    # Step 1: Create draft
-    create_url = "https://substack.com/api/v1/posts"
-    payload = {
-        "title":          title,
-        "body_html":      html_body,
-        "subtitle":       "The Fifty Fund — autonomous AI trading, documented in public.",
-        "publication_id": SUBSTACK_PUB,
-        "type":           "newsletter",
-        "draft":          True,
-    }
-    try:
-        resp = session.post(create_url, json=payload, timeout=15)
-        if resp.status_code not in (200, 201):
-            logger.warning(
-                "Substack create draft failed (%s): %s",
-                resp.status_code, resp.text[:200],
-            )
-            return False
-        post_id = resp.json().get("id")
-        if not post_id:
-            logger.warning("Substack create response missing 'id': %s", resp.text[:200])
-            return False
-        logger.info("Substack draft created (id=%s): %s", post_id, title)
-    except requests.RequestException as exc:
-        logger.error("Substack create request failed: %s", exc)
-        return False
-
-    # Step 2: Publish the draft
-    publish_url = f"https://substack.com/api/v1/posts/{post_id}/publish"
-    try:
-        pub_resp = session.put(publish_url, json={}, timeout=15)
-        if pub_resp.status_code in (200, 201, 204):
-            logger.info("Substack post published (id=%s): %s", post_id, title)
-            return True
-        logger.warning(
-            "Substack publish failed (%s): %s",
-            pub_resp.status_code, pub_resp.text[:200],
-        )
-        return False
-    except requests.RequestException as exc:
-        logger.error("Substack publish request failed: %s", exc)
-        return False
+        logger.info("GMAIL_EMAIL or GMAIL_APP_PASSWORD not set — post saved locally only.")
 
 
 def _save_draft_locally(title: str, body: str, post_type: str) -> None:
@@ -392,12 +337,12 @@ def _save_draft_locally(title: str, body: str, post_type: str) -> None:
 
 def test_post() -> None:
     """
-    Publish a single test post to verify the Substack connection works.
-    Requires SUBSTACK_LLI to be set in the environment.
+    Send a test email to verify the Gmail SMTP → Substack pipeline works.
+    Requires GMAIL_EMAIL and GMAIL_APP_PASSWORD to be set in the environment.
     """
-    if not SUBSTACK_LLI:
-        print("ERROR: SUBSTACK_LLI environment variable is not set.")
-        print("Set it to the value of your substack.sid session cookie.")
+    if not GMAIL_EMAIL or not GMAIL_APP_PASSWORD:
+        print("ERROR: GMAIL_EMAIL and GMAIL_APP_PASSWORD environment variables must be set.")
+        print("Use a Gmail App Password (not your account password).")
         return
 
     title = f"[TEST] AlgoMind connection check — {datetime.now().strftime('%Y-%m-%d %H:%M')}"
@@ -408,14 +353,14 @@ def test_post() -> None:
         f"Published at: {datetime.now().isoformat()}"
     )
 
-    print(f"Creating test post: {title}")
+    print(f"Sending test email to {SUBSTACK_EMAIL}: {title}")
     _save_draft_locally(title, body, "test_post")
 
-    success = _publish_to_substack(title, body)
+    success = _send_to_substack(title, body)
     if success:
-        print("Test post published successfully.")
+        print("Test email sent successfully. Check Substack Drafts.")
     else:
-        print("Test post FAILED — check logs or verify SUBSTACK_LLI is valid.")
+        print("Test email FAILED — check logs or verify GMAIL credentials.")
 
 
 if __name__ == "__main__":

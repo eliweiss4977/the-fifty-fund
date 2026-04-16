@@ -66,6 +66,36 @@
 
 ---
 
+## April 16, 2026 — Session 3
+
+### What Was Built Today
+| File | Description | Status |
+|------|-------------|--------|
+| `agent/substack_engine.py` | Replaced cookie/API auth with Gmail SMTP email-to-Substack | ✅ Complete |
+| `docs/progress.md` | Progress tracker updated | ✅ Complete |
+
+### Substack Publishing — New Approach
+- **Method:** Email post to `thefiftyfund@substack.com` via Gmail SMTP
+- **Why:** Substack's API blocked by Cloudflare; cookie-based auth unreliable. Email-to-draft is the official supported path.
+- **Auth:** `GMAIL_EMAIL` + `GMAIL_APP_PASSWORD` (Gmail App Password, not account password)
+- **Flow:** `smtplib.SMTP("smtp.gmail.com", 587)` → STARTTLS → login → sendmail
+- **Subject line** = post title; **body** = plain-text post content
+- **Local backup** to `drafts/` still happens first on every publish
+- **Test:** `python agent/substack_engine.py test` sends a test email and prints result
+
+### Env Vars Required
+| Variable | Value |
+|----------|-------|
+| `GMAIL_EMAIL` | Gmail address used to send (e.g. `algomind@gmail.com`) |
+| `GMAIL_APP_PASSWORD` | 16-char App Password from Google Account → Security → App Passwords |
+
+### Removed
+- `SUBSTACK_LLI` / `SUBSTACK_SID` env vars (no longer needed)
+- `requests` import and all HTTP session/cookie code
+- `_get_substack_session()` and `_publish_to_substack()` functions
+
+---
+
 ## Upcoming Sessions
 
 ### Session 2 (planned)
