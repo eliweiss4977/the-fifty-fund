@@ -2,7 +2,7 @@
 substack_engine.py — AI-authored Substack content engine for The Fifty Fund
 ============================================================================
 Uses Claude AI to write all content in first-person as AlgoMind (the agent).
-Authenticates to Substack using the SUBSTACK_SID session cookie.
+Authenticates to Substack using the SUBSTACK_LLI JWT token cookie.
 Always saves a local backup to drafts/ alongside every Substack publish.
 
 Publishing schedule (enforced by agent_with_x.py scheduler):
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # ── Config ────────────────────────────────────────────────────────────────────
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-SUBSTACK_SID      = os.getenv("SUBSTACK_SID", "")   # value of substack.sid cookie
+SUBSTACK_LLI      = os.getenv("SUBSTACK_LLI", "")   # value of substack.lli JWT token cookie
 SUBSTACK_PUB      = os.getenv("SUBSTACK_PUB", "thefiftyfund")
 
 CLAUDE_MODEL  = "claude-sonnet-4-20250514"
@@ -47,9 +47,9 @@ claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 def _get_substack_session() -> requests.Session:
-    """Return a requests.Session authenticated with the Substack session cookie."""
+    """Return a requests.Session authenticated with the Substack JWT token cookie."""
     session = requests.Session()
-    session.cookies.set("substack.sid", SUBSTACK_SID, domain=".substack.com")
+    session.cookies.set('substack.lli', os.environ['SUBSTACK_LLI'], domain='.substack.com')
     session.headers.update({
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'application/json, text/plain, */*',
@@ -65,6 +65,7 @@ def _get_substack_session() -> requests.Session:
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
         'Content-Type': 'application/json',
+        'Cookie': f'substack.lli={os.environ["SUBSTACK_LLI"]}',
     })
     return session
 
@@ -303,17 +304,17 @@ def _publish_and_save(title: str, body: str, post_type: str) -> None:
     """
     _save_draft_locally(title, body, post_type)
 
-    if SUBSTACK_SID and SUBSTACK_PUB:
+    if SUBSTACK_LLI and SUBSTACK_PUB:
         _publish_to_substack(title, body)
     else:
-        logger.info("SUBSTACK_SID not set — post saved locally only.")
+        logger.info("SUBSTACK_LLI not set — post saved locally only.")
 
 
 def _publish_to_substack(title: str, body: str) -> bool:
     """
     Create a draft on Substack then immediately publish it.
 
-    Uses session cookie auth (SUBSTACK_SID env var):
+    Uses session cookie auth (SUBSTACK_LLI env var):
       1. POST https://substack.com/api/v1/posts  → creates draft, returns post id
       2. PUT  https://substack.com/api/v1/posts/{id}/publish  → publishes it
 
@@ -392,10 +393,10 @@ def _save_draft_locally(title: str, body: str, post_type: str) -> None:
 def test_post() -> None:
     """
     Publish a single test post to verify the Substack connection works.
-    Requires SUBSTACK_SID to be set in the environment.
+    Requires SUBSTACK_LLI to be set in the environment.
     """
-    if not SUBSTACK_SID:
-        print("ERROR: SUBSTACK_SID environment variable is not set.")
+    if not SUBSTACK_LLI:
+        print("ERROR: SUBSTACK_LLI environment variable is not set.")
         print("Set it to the value of your substack.sid session cookie.")
         return
 
@@ -414,7 +415,7 @@ def test_post() -> None:
     if success:
         print("Test post published successfully.")
     else:
-        print("Test post FAILED — check logs or verify SUBSTACK_SID is valid.")
+        print("Test post FAILED — check logs or verify SUBSTACK_LLI is valid.")
 
 
 if __name__ == "__main__":
