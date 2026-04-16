@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 
 # ── Internal modules ──────────────────────────────────────────────────────────
 import algomind_agent as agent
+from algomind_agent import append_ai_log
 import x_poster       as xp
 import substack_engine as sub
 
@@ -64,11 +65,18 @@ def run_cycle() -> None:
       1. Fetch market data & portfolio
       2. Ask Claude for a decision
       3. Execute the trade via Alpaca
-      4. Post the decision to X
-      5. Check for newly unlocked milestones
-      6. Accumulate trade for weekly Substack review
+      4. Send Telegram alert (logged to ai_log)
+      5. Post the decision to X (tweet text stored in trade entry)
+      6. Update dashboard with x_post_text included
+      7. Check for newly unlocked milestones
+      8. Accumulate trade for weekly Substack review
+      9. One push to GitHub at end of cycle if data.json was modified
     """
     logger.info("=== run_cycle() start ===")
+
+    # Track action/ticker for the end-of-cycle push label
+    _cycle_action = ""
+    _cycle_ticker = ""
 
     try:
         # ── Market data + portfolio ──────────────────────────────────────────
@@ -85,6 +93,11 @@ def run_cycle() -> None:
         decision["result"]    = result
         decision["timestamp"] = datetime.now(ET_ZONE).isoformat()
 
+        action = (decision.get("action") or "HOLD").upper()
+        ticker = decision.get("ticker") or ""
+        _cycle_action = action
+        _cycle_ticker = ticker
+
         # ── Telegram notification ─────────────────────────────────────────────
         pv        = portfolio["portfolio_value"]
         pnl_pct   = (pv - agent.STARTING_CASH) / agent.STARTING_CASH * 100
@@ -97,18 +110,40 @@ def run_cycle() -> None:
             f"Confidence: {decision.get('confidence', '?')}/10\n"
             f"Portfolio : ${pv:.2f} ({pnl_pct:+.1f}% vs start)"
         )
-        agent.send_telegram(tg_msg)
+        tg_sent = agent.send_telegram(tg_msg)
+        try:
+            if tg_sent:
+                append_ai_log("Telegram alert sent", ["telegram"])
+            else:
+                append_ai_log("Telegram alert failed", ["telegram", "error"])
+        except Exception:
+            pass
         agent.send_email(
             f"[TheFiftyFund] {decision.get('action', '?')} {decision.get('ticker') or ''}",
             tg_msg,
         )
 
-        # ── X post ───────────────────────────────────────────────────────────
-        xp.post_trade_decision(decision)
+        # ── X post — capture tweet text for dashboard storage ─────────────────
+        tweet_text = xp.post_trade_decision(decision)
+        try:
+            append_ai_log(
+                f"Trade posted to X: {(tweet_text or '')[:100]}",
+                ["x-post", "trade"],
+            )
+        except Exception:
+            pass
+
+        # ── Dashboard update with tweet text (BUY/SELL only) ─────────────────
+        if action in ("BUY", "SELL"):
+            try:
+                agent.update_dashboard_data(
+                    decision, result, portfolio, x_post_text=tweet_text
+                )
+            except Exception as exc:
+                logger.error("Dashboard update failed (trade was still executed): %s", exc)
 
         # ── First trade flag ─────────────────────────────────────────────────
         is_first_trade = False
-        action = (decision.get("action") or "HOLD").upper()
         if action in ("BUY", "SELL") and not _state["first_trade_done"]:
             _state["first_trade_done"] = True
             is_first_trade = True
@@ -116,12 +151,19 @@ def run_cycle() -> None:
         # ── Milestone check (refresh portfolio post-trade) ───────────────────
         try:
             fresh_portfolio = agent.get_portfolio()
-            xp.check_and_post_milestones(
+            first_hit = xp.check_and_post_milestones(
                 portfolio_value=fresh_portfolio["portfolio_value"],
                 first_trade=is_first_trade,
             )
+            for key in first_hit:
+                try:
+                    append_ai_log(
+                        f"Milestone posted to X: {key}",
+                        ["x-post", "milestone"],
+                    )
+                except Exception:
+                    pass
             # Also trigger Substack milestone posts for newly hit milestones
-            # (milestone keys are returned but we only need to call sub once per key)
             newly_hit = xp.check_and_post_milestones(
                 portfolio_value=fresh_portfolio["portfolio_value"],
                 first_trade=False,   # already passed above if applicable
@@ -141,6 +183,15 @@ def run_cycle() -> None:
         logger.error("run_cycle() error: %s", exc, exc_info=True)
         agent.send_telegram(f"⚠️ AlgoMind run_cycle error:\n{exc}")
 
+    finally:
+        # ── One push per cycle max (if data.json was modified) ───────────────
+        if agent._dashboard_dirty:
+            try:
+                agent.push_dashboard_to_github(_cycle_action or "ai-log", _cycle_ticker)
+            except Exception as exc:
+                logger.error("End-of-cycle dashboard push failed: %s", exc)
+            agent._dashboard_dirty = False
+
 
 # ── Scheduled Event Handlers ──────────────────────────────────────────────────
 
@@ -149,9 +200,16 @@ def _handle_morning_outlook(market_data: dict) -> None:
     today = date.today()
     if today in _state["morning_outlook_posted"]:
         return
-    xp.post_morning_outlook(market_data)
+    tweet = xp.post_morning_outlook(market_data)
     _state["morning_outlook_posted"].add(today)
     logger.info("Morning outlook posted for %s.", today)
+    try:
+        append_ai_log(
+            f"Morning outlook posted to X: {(tweet or '')[:100]}",
+            ["x-post", "morning-outlook"],
+        )
+    except Exception:
+        pass
 
 
 def _handle_eod(portfolio: dict) -> None:

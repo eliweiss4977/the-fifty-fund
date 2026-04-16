@@ -128,13 +128,17 @@ def _save_milestones(data: dict) -> None:
 
 # ── Public Posting Functions ──────────────────────────────────────────────────
 
-def post_trade_decision(decision: dict) -> bool:
+def post_trade_decision(decision: dict) -> str:
     """
     Post a tweet announcing a trade decision with full AI reasoning.
 
     Args:
         decision: The decision dict returned by algomind_agent.ask_claude(),
                   with a "result" key added by execute_trade().
+
+    Returns:
+        The tweet text that was built (regardless of posting success) so
+        callers can store it in the dashboard's x_post field.
     """
     action    = (decision.get("action") or "HOLD").upper()
     ticker    = decision.get("ticker") or ""
@@ -157,15 +161,19 @@ def post_trade_decision(decision: dict) -> bool:
         f"Confidence: {confidence}/10\n"
         f"#TheFiftyFund #AITrading #AlgoTrading"
     )
-    return _post(tweet)
+    _post(tweet)
+    return tweet
 
 
-def post_morning_outlook(market_data: dict) -> bool:
+def post_morning_outlook(market_data: dict) -> str:
     """
     Post a brief morning market outlook tweet at market open.
 
     Args:
         market_data: Dict returned by algomind_agent.fetch_market_data().
+
+    Returns:
+        The tweet text that was built, for ai_log capture by the caller.
     """
     now_et = datetime.now(ET_ZONE).strftime("%A, %b %d")
 
@@ -194,7 +202,9 @@ def post_morning_outlook(market_data: dict) -> bool:
         lines.append(f"Overbought (RSI>70): {', '.join(overbought)}")
     lines.append("\nScanning for signals… #TheFiftyFund #AITrading")
 
-    return _post("\n".join(lines))
+    tweet = "\n".join(lines)
+    _post(tweet)
+    return tweet
 
 
 def post_eod_summary(portfolio: dict) -> bool:

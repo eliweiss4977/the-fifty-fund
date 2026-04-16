@@ -66,6 +66,10 @@ MAX_POSITION_PCT = 0.30          # cap any single position at 30% of portfolio
 
 ET_ZONE = pytz.timezone("America/New_York")
 
+# Set True whenever data.json is written; agent_with_x checks this at cycle end
+# to decide whether to push — giving one git push per cycle max.
+_dashboard_dirty: bool = False
+
 _REPO_ROOT      = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _DATA_JSON_PATH = os.path.join(_REPO_ROOT, "docs", "data.json")
 
@@ -365,12 +369,24 @@ def execute_trade(decision: dict) -> str:
     reason  = decision.get("reasoning", "")
 
     if action == "HOLD" or not ticker:
-        return f"HOLD — {reason}"
+        msg = f"HOLD — {reason}"
+        try:
+            append_ai_log(msg, ["hold", "market-analysis"])
+        except Exception:
+            pass
+        return msg
 
     portfolio = get_portfolio()
     is_valid, validation_reason = validate_decision(decision, portfolio)
     if not is_valid:
         logger.warning("Trade rejected by guardrails: %s", validation_reason)
+        try:
+            append_ai_log(
+                f"REJECTED {action} {ticker} — {validation_reason}",
+                ["rejected", ticker.lower()],
+            )
+        except Exception:
+            pass
         return f"REJECTED ({action} {ticker}) — {validation_reason}"
 
     result = None
@@ -403,27 +419,30 @@ def execute_trade(decision: dict) -> str:
 
     except Exception as exc:
         logger.error("Trade execution error: %s", exc)
+        try:
+            append_ai_log(f"ERROR — {exc}", ["error"])
+        except Exception:
+            pass
         return f"ERROR: {action} {ticker} failed — {exc}"
 
     if result is None:
         return "HOLD — unrecognised action"
 
-    try:
-        update_dashboard_data(decision, result, portfolio)
-        push_dashboard_to_github(action, ticker)
-    except Exception as exc:
-        logger.error("Dashboard update failed (trade was still executed): %s", exc)
-
+    # Dashboard update and push are handled by the caller so that
+    # x_post_text (built after this function returns) can be included.
     return result
 
 
 # ── Notifications ─────────────────────────────────────────────────────────────
 
-def send_telegram(message: str) -> None:
-    """Send a message to the configured Telegram chat. Silently skips if not configured."""
+def send_telegram(message: str) -> bool:
+    """
+    Send a message to the configured Telegram chat.
+    Returns True on success, False if not configured or on error.
+    """
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         logger.debug("Telegram not configured — skipping.")
-        return
+        return False
     try:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         requests.post(
@@ -431,8 +450,10 @@ def send_telegram(message: str) -> None:
             json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"},
             timeout=10,
         )
+        return True
     except Exception as exc:
         logger.warning("Telegram send failed: %s", exc)
+        return False
 
 
 def send_email(subject: str, body: str) -> None:
@@ -481,7 +502,12 @@ def _compute_win_rate(trades: list) -> float | None:
     return round(wins / total * 100, 1) if total else None
 
 
-def update_dashboard_data(decision: dict, trade_result: str, portfolio: dict) -> None:
+def update_dashboard_data(
+    decision: dict,
+    trade_result: str,
+    portfolio: dict,
+    x_post_text: str | None = None,
+) -> None:
     """
     Load docs/data.json, append this trade's entries, recalculate live fields,
     and write back.
@@ -573,6 +599,7 @@ def update_dashboard_data(decision: dict, trade_result: str, portfolio: dict) ->
         "price":         round(price, 4),
         "reasoning":     decision.get("reasoning", ""),
         "confidence":    int(decision.get("confidence") or 0),
+        "x_post":        x_post_text,
     }
 
     # ── Append to historical arrays ───────────────────────────────────────────
@@ -604,6 +631,8 @@ def update_dashboard_data(decision: dict, trade_result: str, portfolio: dict) ->
     with open(_DATA_JSON_PATH, "w") as fh:
         json.dump(data, fh, indent=2)
 
+    global _dashboard_dirty
+    _dashboard_dirty = True
     logger.info("Dashboard data updated: %s %s", action, ticker)
 
 
@@ -658,6 +687,34 @@ def push_dashboard_to_github(action: str = "", ticker: str = "") -> None:
         logger.error("Dashboard push unexpected error: %s", exc)
 
 
+def append_ai_log(message: str, tags: list) -> None:
+    """
+    Append an entry to data.json's ai_log[] and mark the dashboard dirty.
+    Lightweight — for non-trade events like HOLDs, X posts, Telegram alerts.
+    Never raises; must not break the agent.
+    Skips silently if data.json does not exist yet.
+    """
+    global _dashboard_dirty
+    try:
+        if not os.path.exists(_DATA_JSON_PATH):
+            return
+        try:
+            with open(_DATA_JSON_PATH) as fh:
+                data = json.load(fh)
+        except (json.JSONDecodeError, OSError):
+            return
+        data.setdefault("ai_log", []).append({
+            "timestamp": datetime.now(ET_ZONE).isoformat(),
+            "message":   message,
+            "tags":      tags,
+        })
+        with open(_DATA_JSON_PATH, "w") as fh:
+            json.dump(data, fh, indent=2)
+        _dashboard_dirty = True
+    except Exception as exc:
+        logger.warning("append_ai_log failed (non-fatal): %s", exc)
+
+
 # ── Core Trade Cycle ──────────────────────────────────────────────────────────
 
 def run_trade_cycle() -> dict | None:
@@ -686,6 +743,15 @@ def run_trade_cycle() -> dict | None:
 
         decision["result"]    = result
         decision["timestamp"] = now_et.isoformat()
+
+        # Standalone mode: update dashboard immediately (no x_post_text available)
+        _action = (decision.get("action") or "HOLD").upper()
+        if _action in ("BUY", "SELL"):
+            try:
+                update_dashboard_data(decision, result, portfolio)
+                push_dashboard_to_github(_action, decision.get("ticker", ""))
+            except Exception as _exc:
+                logger.error("Dashboard update failed (trade was still executed): %s", _exc)
 
         pv        = portfolio["portfolio_value"]
         pnl       = pv - STARTING_CASH
