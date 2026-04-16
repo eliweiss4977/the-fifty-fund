@@ -202,6 +202,7 @@ def validate_trade(
     portfolio: dict,
     account: Any,
     ledger_path: Path,
+    cycle_id: str = "",
 ) -> tuple[bool, str]:
     """
     Run all pre-trade risk checks and log the outcome to the ledger.
@@ -214,16 +215,19 @@ def validate_trade(
         ledger_path: Path to data/ledger.jsonl.
                      Pass None to skip ledger-dependent checks (trades-per-day,
                      duplicate-order).
+        cycle_id:    Optional cycle identifier to tag the DECISION_VALIDATED event.
 
     Returns:
         (True, "ok")               — all rules passed
         (False, "<rule>: <msg>")   — first failing rule and its reason
     """
+    if not cycle_id:
+        raise ValueError("validate_trade() requires a non-empty cycle_id")
     action = (decision.get("action") or "HOLD").upper()
     ticker = decision.get("ticker") or ""
 
     if action == "HOLD":
-        _log_validated(decision, True, "hold")
+        _log_validated(decision, True, "hold", cycle_id)
         return True, "hold"
 
     checks = [
@@ -240,16 +244,15 @@ def validate_trade(
         passed, reason = check()
         if not passed:
             logger.warning("Risk check FAILED [%s %s]: %s", action, ticker, reason)
-            _log_validated(decision, False, reason)
+            _log_validated(decision, False, reason, cycle_id)
             return False, reason
 
-    _log_validated(decision, True, "ok")
+    _log_validated(decision, True, "ok", cycle_id)
     return True, "ok"
 
 
-def _log_validated(decision: dict, passed: bool, reason: str) -> None:
-    """Write a DECISION_VALIDATED event, using the decision's cycle_id if present."""
-    cycle_id = decision.get("cycle_id") or _ledger.generate_cycle_id()
+def _log_validated(decision: dict, passed: bool, reason: str, cycle_id: str) -> None:
+    """Write a DECISION_VALIDATED event."""
     try:
         _ledger.log_event(
             cycle_id,
@@ -325,7 +328,7 @@ if __name__ == "__main__":
 
     failures = 0
     for desc, decision, expected in cases:
-        ok, reason = validate_trade(decision, portfolio, account=None, ledger_path=tmp_path)
+        ok, reason = validate_trade(decision, portfolio, account=None, ledger_path=tmp_path, cycle_id="test")
         status = "PASS" if ok == expected else "FAIL"
         if status == "FAIL":
             failures += 1
@@ -339,7 +342,7 @@ if __name__ == "__main__":
 
     ok, reason = validate_trade(
         {"action": "BUY", "ticker": "MSFT", "dollar_amount": 5.00},
-        portfolio, account=None, ledger_path=tmp_path,
+        portfolio, account=None, ledger_path=tmp_path, cycle_id="test",
     )
     status = "PASS" if not ok else "FAIL"
     if status == "FAIL":
@@ -352,7 +355,7 @@ if __name__ == "__main__":
     _write_order(tmp_path, "AAPL")
     ok, reason = validate_trade(
         {"action": "BUY", "ticker": "AAPL", "dollar_amount": 5.00},
-        portfolio, account=None, ledger_path=tmp_path,
+        portfolio, account=None, ledger_path=tmp_path, cycle_id="test",
     )
     status = "PASS" if not ok else "FAIL"
     if status == "FAIL":
@@ -367,7 +370,7 @@ if __name__ == "__main__":
 
     ok, reason = validate_trade(
         {"action": "BUY", "ticker": "GOOGL", "dollar_amount": 5.00},
-        portfolio, account=_MockAccount(), ledger_path=None,
+        portfolio, account=_MockAccount(), ledger_path=None, cycle_id="test",
     )
     status = "PASS" if not ok else "FAIL"
     if status == "FAIL":

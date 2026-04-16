@@ -72,8 +72,9 @@ ET_ZONE = pytz.timezone("America/New_York")
 # to decide whether to push — giving one git push per cycle max.
 _dashboard_dirty: bool = False
 
-_REPO_ROOT      = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-_DATA_JSON_PATH = os.path.join(_REPO_ROOT, "docs", "data.json")
+_REPO_ROOT       = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_DATA_JSON_PATH  = os.path.join(_REPO_ROOT, "docs", "data.json")
+_STATE_JSON_PATH = os.path.join(_REPO_ROOT, "data", "state.json")
 
 # ── API Clients ───────────────────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ def _calc_rsi(closes: np.ndarray, period: int = 14) -> float:
 
 # ── Portfolio Snapshot ────────────────────────────────────────────────────────
 
+# Deprecated for trading cycle use: reconciliation.get_portfolio_and_account() is authoritative.
 def get_portfolio() -> dict:
     """
     Fetch the current Alpaca account and open positions.
@@ -291,72 +293,6 @@ REQUIRED RESPONSE FORMAT
     return decision
 
 
-# ── Pre-Trade Guardrails ──────────────────────────────────────────────────────
-
-def check_pdt_safe() -> tuple[bool, str]:
-    """
-    Return (False, reason) if the account already has 3 or more day trades in
-    the rolling 5-business-day window — which would trigger PDT lock on a cash
-    account.  Otherwise (True, "ok").
-    """
-    account = alpaca.get_account()
-    count = int(getattr(account, "daytrade_count", 0))
-    if count >= 3:
-        return False, f"PDT limit reached ({count} day trades in window)"
-    return True, "ok"
-
-
-def validate_decision(decision: dict, portfolio: dict) -> tuple[bool, str]:
-    """
-    Enforce hard pre-trade guardrails before any order reaches Alpaca.
-
-    Returns (is_valid, reason).
-    """
-    action = (decision.get("action") or "HOLD").upper()
-    ticker = decision.get("ticker")
-
-    if action == "HOLD":
-        return True, "hold"
-
-    if not ticker:
-        return False, "no ticker provided"
-
-    cash            = portfolio["cash"]
-    portfolio_value = portfolio["portfolio_value"]
-    positions       = portfolio.get("positions", {})
-
-    if action == "BUY":
-        dollar_amount = float(decision.get("dollar_amount") or 0)
-        if dollar_amount < 1.00:
-            return False, f"dollar_amount ${dollar_amount:.2f} below Alpaca minimum ($1.00)"
-        if cash - dollar_amount < CASH_BUFFER:
-            return False, (
-                f"insufficient cash: ${cash:.2f} - ${dollar_amount:.2f} "
-                f"would breach ${CASH_BUFFER:.2f} buffer"
-            )
-        existing_mv = positions.get(ticker, {}).get("market_value", 0.0)
-        if existing_mv + dollar_amount > portfolio_value * MAX_POSITION_PCT:
-            return False, (
-                f"position concentration: existing ${existing_mv:.2f} + "
-                f"${dollar_amount:.2f} would exceed "
-                f"{int(MAX_POSITION_PCT * 100)}% of ${portfolio_value:.2f}"
-            )
-
-    elif action == "SELL":
-        qty = float(decision.get("qty") or 0)
-        if qty <= 0:
-            return False, f"qty {qty} must be > 0"
-        held_qty = positions.get(ticker, {}).get("qty", 0.0)
-        if qty > held_qty:
-            return False, f"qty {qty} exceeds held qty {held_qty} for {ticker}"
-
-    pdt_ok, pdt_reason = check_pdt_safe()
-    if not pdt_ok:
-        return False, pdt_reason
-
-    return True, "ok"
-
-
 # ── Trade Execution ───────────────────────────────────────────────────────────
 
 def execute_trade(decision: dict) -> str:
@@ -369,27 +305,6 @@ def execute_trade(decision: dict) -> str:
     action  = (decision.get("action") or "HOLD").upper()
     ticker  = decision.get("ticker")
     reason  = decision.get("reasoning", "")
-
-    if action == "HOLD" or not ticker:
-        msg = f"HOLD — {reason}"
-        try:
-            append_ai_log(msg, ["hold", "market-analysis"])
-        except Exception:
-            pass
-        return msg
-
-    portfolio = get_portfolio()
-    is_valid, validation_reason = validate_decision(decision, portfolio)
-    if not is_valid:
-        logger.warning("Trade rejected by guardrails: %s", validation_reason)
-        try:
-            append_ai_log(
-                f"REJECTED {action} {ticker} — {validation_reason}",
-                ["rejected", ticker.lower()],
-            )
-        except Exception:
-            pass
-        return f"REJECTED ({action} {ticker}) — {validation_reason}"
 
     result = None
     try:
@@ -430,8 +345,6 @@ def execute_trade(decision: dict) -> str:
     if result is None:
         return "HOLD — unrecognised action"
 
-    # Dashboard update and push are handled by the caller so that
-    # x_post_text (built after this function returns) can be included.
     return result
 
 
@@ -741,29 +654,17 @@ def append_ai_log(message: str, tags: list) -> None:
 
 
 def _update_agent_state(key: str, value: str) -> None:
-    """
-    Update a single agent-state field in docs/data.json without disturbing
-    any other data.  Marks the dashboard dirty so the value is included in
-    the next cycle-end push to GitHub.
-
-    Used to persist last_cycle_utc and last_outlook_date across Railway
-    redeploys so the agent does not spam duplicate tweets on restart.
-
-    Never raises — must not break the agent.
-    """
-    global _dashboard_dirty
+    """Persist agent scheduling state to data/state.json (private, not pushed to GitHub)."""
     try:
-        if not os.path.exists(_DATA_JSON_PATH):
-            return
+        os.makedirs(os.path.dirname(_STATE_JSON_PATH), exist_ok=True)
         try:
-            with open(_DATA_JSON_PATH) as fh:
-                data = json.load(fh)
-        except (json.JSONDecodeError, OSError):
-            return
-        data[key] = value
-        with open(_DATA_JSON_PATH, "w") as fh:
-            json.dump(data, fh, indent=2)
-        _dashboard_dirty = True
+            with open(_STATE_JSON_PATH) as fh:
+                state = json.load(fh)
+        except (FileNotFoundError, json.JSONDecodeError):
+            state = {}
+        state[key] = value
+        with open(_STATE_JSON_PATH, "w") as fh:
+            json.dump(state, fh, indent=2)
     except Exception as exc:
         logger.warning("_update_agent_state(%s) failed (non-fatal): %s", key, exc)
 

@@ -7,7 +7,8 @@ milestones_hit.json
 substack_milestones.json
 test_connections.py
 backfill_dashboard.py
-# Operational ledger — keep on Railway filesystem, don't commit to git
+# Operational files — keep on Railway filesystem, don't commit to git
 data/ledger.jsonl
+data/state.json
 # But do track the directory placeholder
 !data/.gitkeep
