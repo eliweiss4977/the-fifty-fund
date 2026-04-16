@@ -11,12 +11,14 @@ Schedule (when run standalone):
 All API credentials are loaded from environment variables / .env file.
 """
 
+import base64
 import json
 import logging
 import os
 import smtplib
-import subprocess
 import time
+import urllib.request
+import urllib.error
 from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -638,7 +640,9 @@ def update_dashboard_data(
 
 def push_dashboard_to_github(action: str = "", ticker: str = "") -> None:
     """
-    Commit docs/data.json and push to GitHub so Pages rebuilds.
+    Upload docs/data.json to GitHub via the Contents API (PUT).
+    No git binary required — works on Railway and any Docker container.
+
     Uses GITHUB_TOKEN env var for authentication.
     Silently skips if GITHUB_TOKEN is not set.
     Never raises — a failed push must not interrupt trading.
@@ -647,42 +651,63 @@ def push_dashboard_to_github(action: str = "", ticker: str = "") -> None:
         logger.debug("GITHUB_TOKEN not set — skipping dashboard push.")
         return
 
-    def _git(*args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            ["git", *args],
-            cwd=_REPO_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+    api_url   = (
+        "https://api.github.com/repos/thefiftyfund/the-fifty-fund"
+        "/contents/docs/data.json"
+    )
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept":        "application/vnd.github+json",
+        "Content-Type":  "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
 
     try:
-        _git("config", "user.name",  "The Fifty Fund Agent")
-        _git("config", "user.email", "50fundagent@gmail.com")
-        _git("add", "docs/data.json")
+        # ── Read local file ───────────────────────────────────────────────────
+        with open(_DATA_JSON_PATH, "rb") as fh:
+            raw_bytes = fh.read()
+        encoded = base64.b64encode(raw_bytes).decode("ascii")
 
-        # Skip commit + push if nothing changed
-        status = _git("status", "--porcelain", "docs/data.json")
-        if not status.stdout.strip():
-            logger.info("Dashboard push: nothing to commit.")
-            return
+        # ── GET current SHA (needed for updates; absent only on first creation)
+        sha = None
+        try:
+            get_req = urllib.request.Request(api_url, headers=headers, method="GET")
+            with urllib.request.urlopen(get_req, timeout=15) as resp:
+                remote_meta = json.loads(resp.read().decode())
+                sha = remote_meta.get("sha")
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:
+                raise   # unexpected — re-raise to outer handler
+            # 404 means file doesn't exist yet; proceed with creation (no SHA)
 
+        # ── PUT new content ───────────────────────────────────────────────────
         label     = f"{action} {ticker}".strip() or "update"
         timestamp = datetime.now(ET_ZONE).strftime("%Y-%m-%dT%H:%M")
-        _git("commit", "-m", f"chore: dashboard update - {label} at {timestamp}")
+        payload: dict = {
+            "message":   f"chore: dashboard update - {label} at {timestamp}",
+            "content":   encoded,
+            "committer": {
+                "name":  "The Fifty Fund Agent",
+                "email": "50fundagent@gmail.com",
+            },
+        }
+        if sha:
+            payload["sha"] = sha
 
-        remote = (
-            f"https://x-access-token:{GITHUB_TOKEN}"
-            "@github.com/thefiftyfund/the-fifty-fund.git"
+        put_req = urllib.request.Request(
+            api_url,
+            data=json.dumps(payload).encode(),
+            headers=headers,
+            method="PUT",
         )
-        _git("push", remote, "HEAD:main")
-        logger.info("Dashboard pushed to GitHub.")
+        with urllib.request.urlopen(put_req, timeout=15) as resp:
+            resp.read()   # consume response
 
-    except subprocess.CalledProcessError as exc:
-        logger.error(
-            "Dashboard git push failed: %s | stdout: %s | stderr: %s",
-            exc, exc.stdout, exc.stderr,
-        )
+        logger.info("Dashboard pushed to GitHub via API.")
+
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode(errors="replace")
+        logger.error("Dashboard API push failed: HTTP %s — %s", exc.code, body[:200])
     except Exception as exc:
         logger.error("Dashboard push unexpected error: %s", exc)
 
