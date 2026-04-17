@@ -50,6 +50,12 @@
 | `agent/substack_engine.py` | Substack automation via session cookie (`SUBSTACK_SID`) | ✅ Complete |
 | `docs/progress.md` | Progress tracker updated | ✅ Complete |
 
+### Infrastructure Fix: data/ directory
+- Fixed missing `data/` directory — `state.json` now persists across Railway redeploys, duplicate tweet prevention restored.
+- Added `data/.gitkeep` to git so Railway always has the `data/` dir after every deploy.
+- Added `os.makedirs` guard in `_load_persistent_state()` in `agent_with_x.py` (belt-and-suspenders).
+- `.gitignore` already correctly excludes `data/ledger.jsonl` and `data/state.json` (operational files).
+
 ### Substack Automation Details
 - **Auth method:** `requests.Session()` with `substack.sid` cookie set via `session.cookies.set()`
 - **Create draft:** `POST https://substack.com/api/v1/posts`

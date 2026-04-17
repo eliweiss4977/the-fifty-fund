@@ -120,6 +120,7 @@ def _load_persistent_state() -> dict:
     """
     result: dict = {"last_cycle_utc": None, "last_outlook_date": None}
     try:
+        os.makedirs(os.path.dirname(agent._STATE_JSON_PATH), exist_ok=True)
         with open(agent._STATE_JSON_PATH) as fh:
             state = json.load(fh)
         result["last_cycle_utc"]    = state.get("last_cycle_utc")
