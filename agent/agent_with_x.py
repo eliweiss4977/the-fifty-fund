@@ -581,51 +581,64 @@ def start() -> None:
 
     # ── Main loop ─────────────────────────────────────────────────────────────
     while True:
-        now_et     = datetime.now(ET_ZONE)
-        today      = now_et.date()
-        is_weekday = now_et.weekday() < 5
-
-        # ── Lightweight portfolio snapshot for EOD/monthly handlers ──────────
-        market_data = {}
-        portfolio   = {}
         try:
-            if is_weekday:
-                market_data  = agent.fetch_market_data(agent.TICKERS)
-                snapshot_cid = ldr.generate_cycle_id()
-                portfolio    = _to_legacy_portfolio(reconciliation.get_reconciled_portfolio(snapshot_cid))
+            now_et     = datetime.now(ET_ZONE)
+            today      = now_et.date()
+            is_weekday = now_et.weekday() < 5
+
+            market_open     = now_et.replace(hour=9,  minute=30, second=0, microsecond=0)
+            market_close    = now_et.replace(hour=16, minute=0,  second=0, microsecond=0)
+            eod_threshold   = now_et.replace(hour=16, minute=5,  second=0, microsecond=0)
+            in_market_hours = is_weekday and market_open <= now_et < market_close
+
+            # ── Morning outlook at 9:30am ET ──────────────────────────────────
+            # Fetch market data only when this handler is pending — not every tick.
+            if is_weekday and now_et >= market_open and today not in _state["morning_outlook_posted"]:
+                market_data = {}
+                try:
+                    market_data = agent.fetch_market_data(agent.TICKERS)
+                except Exception as exc:
+                    logger.warning("Could not fetch market data: %s", exc)
+                if market_data:
+                    _handle_morning_outlook(market_data)
+
+            # ── Trade cycle every 30 minutes during market hours ──────────────
+            if in_market_hours:
+                elapsed = (
+                    (now_et - _state["last_cycle_dt"]).total_seconds()
+                    if _state["last_cycle_dt"] is not None
+                    else CYCLE_INTERVAL_SECONDS   # force run on first entry
+                )
+                if elapsed >= CYCLE_INTERVAL_SECONDS:
+                    run_cycle()
+                    _state["last_cycle_dt"] = now_et
+
+            # ── Portfolio snapshot for EOD and monthly handlers ───────────────
+            # Fetch only when at least one of these handlers might fire.
+            needs_portfolio = is_weekday and (now_et >= eod_threshold or now_et.day == 1)
+            if needs_portfolio:
+                portfolio = {}
+                try:
+                    snapshot_cid = ldr.generate_cycle_id()
+                    portfolio    = _to_legacy_portfolio(
+                        reconciliation.get_reconciled_portfolio(snapshot_cid)
+                    )
+                except Exception as exc:
+                    logger.warning("Could not fetch portfolio snapshot: %s", exc)
+
+                # ── EOD events at 4:05pm ET ───────────────────────────────────
+                if now_et >= eod_threshold and portfolio:
+                    _handle_eod(portfolio)
+
+                # ── Monthly deep dive on the 1st ──────────────────────────────
+                if portfolio:
+                    _handle_monthly_deep_dive(portfolio)
+
         except Exception as exc:
-            logger.warning("Could not fetch market snapshot: %s", exc)
+            logger.error("Main loop error (will retry in 60s): %s", exc, exc_info=True)
+            agent.send_telegram(f"⚠️ Main loop error: {exc}")
 
-        market_open     = now_et.replace(hour=9,  minute=30, second=0, microsecond=0)
-        market_close    = now_et.replace(hour=16, minute=0,  second=0, microsecond=0)
-        in_market_hours = is_weekday and market_open <= now_et < market_close
-
-        # ── Morning outlook at 9:30am ET ──────────────────────────────────────
-        if is_weekday and now_et >= market_open and today not in _state["morning_outlook_posted"]:
-            if market_data:
-                _handle_morning_outlook(market_data)
-
-        # ── Trade cycle every 30 minutes during market hours ──────────────────
-        if in_market_hours:
-            elapsed = (
-                (now_et - _state["last_cycle_dt"]).total_seconds()
-                if _state["last_cycle_dt"] is not None
-                else CYCLE_INTERVAL_SECONDS   # force run on first entry
-            )
-            if elapsed >= CYCLE_INTERVAL_SECONDS:
-                run_cycle()
-                _state["last_cycle_dt"] = now_et
-
-        # ── EOD events at 4:05pm ET on weekdays ──────────────────────────────
-        eod_threshold = now_et.replace(hour=16, minute=5, second=0, microsecond=0)
-        if is_weekday and now_et >= eod_threshold and portfolio:
-            _handle_eod(portfolio)
-
-        # ── Monthly deep dive on the 1st ──────────────────────────────────────
-        if is_weekday and portfolio:
-            _handle_monthly_deep_dive(portfolio)
-
-        time.sleep(60)   # poll every minute
+        time.sleep(60)   # always sleep, even after an error
 
 
 # ── Entry Point ───────────────────────────────────────────────────────────────
