@@ -1006,21 +1006,31 @@
   function submitFeedback() {
     const cat = document.getElementById('fbCategory').value;
     const msg = document.getElementById('fbMessage').value.trim();
+    const contact = document.getElementById('fbContact').value.trim();
     if (!msg) return;
 
     document.getElementById('fbSubmit').disabled = true;
     document.getElementById('fbSubmit').textContent = 'Sending...';
 
-    // Simulate send (replace with real endpoint later)
-    setTimeout(() => {
+    // Post to Tally
+    const formData = new FormData();
+    formData.append('category', cat);
+    formData.append('message', msg);
+    formData.append('contact', contact);
+
+    fetch('https://tally.so/r/eqxEd0', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ category: cat, message: msg, contact: contact }).toString(),
+      mode: 'no-cors',
+    }).finally(() => {
       document.getElementById('feedbackForm').style.display = 'none';
       document.getElementById('feedbackSuccess').classList.add('active');
-      // Reset for next time
       document.getElementById('fbMessage').value = '';
       document.getElementById('fbContact').value = '';
       document.getElementById('fbSubmit').disabled = false;
       document.getElementById('fbSubmit').textContent = 'Submit';
-    }, 800);
+    });
   }
 
   // Close modal on overlay click
