@@ -671,6 +671,47 @@
     color: #444;
   }
 
+  /* ── Countdown Timer ── */
+  .countdown-bar {
+    background: rgba(0, 255, 65, 0.03);
+    border-bottom: 1px solid var(--border-green);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .countdown-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .countdown-display {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    letter-spacing: 1px;
+  }
+
+  .countdown-bar.urgent .countdown-display {
+    animation: glow-pulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+      color: var(--green);
+    }
+    50% {
+      text-shadow: 0 0 24px rgba(0, 255, 65, 0.9), 0 0 48px rgba(0, 255, 65, 0.4);
+      color: #80ffb0;
+    }
+  }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .header { padding: 16px 20px; }
@@ -715,6 +756,12 @@
   <button class="nav-tab" data-tab="ailog">AI Log</button>
   <button class="nav-tab" data-tab="about">About</button>
 </nav>
+
+<!-- ── Countdown Timer ── -->
+<div class="countdown-bar" id="countdownBar">
+  <span class="countdown-label">⏱️ NEXT TRADE CYCLE</span>
+  <span class="countdown-display" id="countdownDisplay">--:--</span>
+</div>
 
 <!-- ── Main ── -->
 <main class="main">
@@ -991,6 +1038,45 @@
 
   updateClock();
   setInterval(updateClock, 1000);
+
+  // ── Countdown Timer ──
+  function updateCountdown() {
+    const now = new Date();
+    const etDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const h = etDate.getHours();
+    const m = etDate.getMinutes();
+    const s = etDate.getSeconds();
+    const day = etDate.getDay();
+    const totalMins = h * 60 + m;
+
+    const display = document.getElementById('countdownDisplay');
+    const bar = document.getElementById('countdownBar');
+    const isWeekend = day === 0 || day === 6;
+    const isMarketHours = !isWeekend && totalMins >= 570 && totalMins < 960;
+
+    if (!isMarketHours) {
+      const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      let nextDay;
+      if (day === 5 || day === 6) nextDay = 'Monday';
+      else if (day === 0) nextDay = 'Monday';
+      else nextDay = dayNames[day + 1];
+      display.textContent = 'Market Closed \u2014 Next session: ' + nextDay + ' 9:30 AM ET';
+      bar.classList.remove('urgent');
+      return;
+    }
+
+    const secsIntoCycle = ((totalMins - 570) * 60 + s) % 1800;
+    const secsRemaining = 1800 - secsIntoCycle;
+    const mm = String(Math.floor(secsRemaining / 60)).padStart(2, '0');
+    const ss = String(secsRemaining % 60).padStart(2, '0');
+    display.textContent = 'Next cycle in ' + mm + ':' + ss;
+
+    if (secsRemaining <= 60) bar.classList.add('urgent');
+    else bar.classList.remove('urgent');
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
 
   // ── Feedback Modal ──
   function openFeedback() {
