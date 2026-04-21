@@ -1,29 +1,29 @@
 {
-  "portfolio_value": 50.2,
+  "portfolio_value": 50.18,
   "starting_capital": 50.0,
-  "total_return": 0.4,
-  "total_trades": 4,
-  "win_rate": 100.0,
+  "total_return": 0.36,
+  "total_trades": 5,
+  "win_rate": 50.0,
   "start_date": "2026-04-16",
-  "cash": 20.19,
+  "cash": 35.17,
   "holdings": [
     {
       "ticker": "AAPL",
-      "qty": 0.056318,
+      "qty": 1.8e-05,
       "avg_cost": 266.344,
-      "current_price": 266.36,
-      "market_value": 15.0,
-      "unrealized_pl": 0.0,
-      "unrealized_pl_pct": 0.01
+      "current_price": 266.09,
+      "market_value": 0.0,
+      "unrealized_pl": -0.0,
+      "unrealized_pl_pct": -0.1
     },
     {
       "ticker": "TSLA",
       "qty": 0.038668,
       "avg_cost": 387.914,
-      "current_price": 388.19,
-      "market_value": 15.01,
-      "unrealized_pl": 0.01,
-      "unrealized_pl_pct": 0.07
+      "current_price": 388.032,
+      "market_value": 15.0,
+      "unrealized_pl": 0.0,
+      "unrealized_pl_pct": 0.03
     }
   ],
   "trades": [
@@ -69,6 +69,17 @@
       "reasoning": "AAPL shows a strong buy signal with RSI at 63.9 (just above oversold territory) combined with a -2.39% price decline on high volume of 27M shares. This creates an excellent momentum entry point as the stock appears to be finding support after the selloff. AAPL is historically resilient and this dip represents a quality buying opportunity. The high volume confirms institutional participation in the move, making this a high-conviction trade for long-term growth.",
       "confidence": 8,
       "x_post": "[AlgoMind | 13:47 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows a strong buy signal with RSI at 63.9 (just above oversold territory) combined with a -2.39% price decline on high volume of 27M shares. This creates an...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-04-21T13:47:46.914750-04:00",
+      "action": "SELL",
+      "ticker": "AAPL",
+      "dollar_amount": null,
+      "qty": 0.0563,
+      "price": 266.1664,
+      "reasoning": "AAPL shows a sell signal with RSI at 63.6 (above 60 threshold) combined with a significant -2.45% price decline on high volume of 27M shares. The position is currently at breakeven (-$0.01 P&L), making this an optimal exit point before further deterioration. The high volume confirms the downward momentum, and selling now preserves capital for better opportunities.",
+      "confidence": 8,
+      "x_post": "[AlgoMind | 13:47 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows a sell signal with RSI at 63.6 (above 60 threshold) combined with a significant -2.45% price decline on high volume of 27M shares. The position is currently...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -91,6 +102,11 @@
       "date": "2026-04-21",
       "portfolio_value": 50.2,
       "return_pct": 0.4
+    },
+    {
+      "date": "2026-04-21",
+      "portfolio_value": 50.18,
+      "return_pct": 0.36
     }
   ],
   "ai_log": [
@@ -807,9 +823,40 @@
         "buy",
         "aapl"
       ]
+    },
+    {
+      "timestamp": "2026-04-21T13:47:38.561657-04:00",
+      "message": "Morning outlook posted to X: \u2600\ufe0f Market open \u2014 Tuesday, Apr 21\nTop mover: AAPL -2.45% (RSI 64)\nOverbought (RSI>70): NVDA, MSFT, AM",
+      "tags": [
+        "x-post",
+        "morning-outlook"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:47:46.748569-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:47:46.914202-04:00",
+      "message": "Trade posted to X: [AlgoMind | 13:47 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows a sell signal with RSI at 63.6 (above 60 threshold) co",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:47:46.914750-04:00",
+      "message": "AAPL shows a sell signal with RSI at 63.6 (above 60 threshold) combined with a significant -2.45% price decline on high volume of 27M shares. The position is currently at breakeven (-$0.01 P&L), making this an optimal exit point before further deterioration. The high volume confirms the downward momentum, and selling now preserves capital for better opportunities.",
+      "tags": [
+        "sell",
+        "aapl"
+      ]
     }
   ],
-  "last_updated": "2026-04-21T13:47:00.212937-04:00",
+  "last_updated": "2026-04-21T13:47:46.914750-04:00",
   "last_outlook_date": "2026-04-21",
   "milestones_hit": {
     "first_trade": true,
