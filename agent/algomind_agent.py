@@ -276,7 +276,7 @@ REQUIRED RESPONSE FORMAT
   "market_summary": "<one sentence on overall market conditions today>"
 }}"""
 
-   max_usd = round(portfolio['portfolio_value'] * MAX_POSITION_PCT, 2)
+    max_usd = round(portfolio['portfolio_value'] * MAX_POSITION_PCT, 2)
     prompt += f"\n\nMax dollar_amount allowed for any single BUY: ${max_usd:.2f}"
 
     response = claude.messages.create(
