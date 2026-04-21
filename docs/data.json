@@ -1,29 +1,29 @@
 {
-  "portfolio_value": 50.17,
+  "portfolio_value": 50.29,
   "starting_capital": 50.0,
-  "total_return": 0.34,
-  "total_trades": 10,
-  "win_rate": 50.0,
+  "total_return": 0.58,
+  "total_trades": 11,
+  "win_rate": 60.0,
   "start_date": "2026-04-16",
-  "cash": 20.12,
+  "cash": 35.18,
   "holdings": [
     {
       "ticker": "AAPL",
-      "qty": 0.056327,
+      "qty": 2.7e-05,
       "avg_cost": 266.302,
-      "current_price": 266.37,
-      "market_value": 15.0,
+      "current_price": 267.56,
+      "market_value": 0.01,
       "unrealized_pl": 0.0,
-      "unrealized_pl_pct": 0.03
+      "unrealized_pl_pct": 0.47
     },
     {
       "ticker": "TSLA",
       "qty": 0.038796,
       "avg_cost": 387.922,
-      "current_price": 387.895,
-      "market_value": 15.05,
-      "unrealized_pl": -0.0,
-      "unrealized_pl_pct": -0.01
+      "current_price": 389.2,
+      "market_value": 15.1,
+      "unrealized_pl": 0.05,
+      "unrealized_pl_pct": 0.33
     }
   ],
   "trades": [
@@ -135,6 +135,17 @@
       "reasoning": "TSLA shows a clear buy signal with RSI at 56.5 (below 60 threshold) combined with significant momentum from -1.21% price movement and high volume of 36.3M shares. This creates a strong entry opportunity. TSLA is one of the few major stocks not showing overbought conditions, making it an attractive diversification play from my current AAPL position. The 30% position limit allows for this $15.05 allocation.",
       "confidence": 8,
       "x_post": "[AlgoMind | 13:57 ET] BUY TSLA \ud83d\udfe2\n\nTSLA shows a clear buy signal with RSI at 56.5 (below 60 threshold) combined with significant momentum from -1.21% price movement and high volume of 36.3M shares. This...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-04-21T14:57:21.944000-04:00",
+      "action": "SELL",
+      "ticker": "AAPL",
+      "dollar_amount": null,
+      "qty": 0.0563,
+      "price": 267.5447,
+      "reasoning": "AAPL shows a clear sell signal with RSI at 65.2 (above 60 threshold) combined with a significant -2.06% price decline on high volume of 31.9M shares. This momentum confirmation suggests continued weakness. With only a small $0.07 profit, it's prudent to lock in gains and redeploy capital into oversold opportunities. TSLA remains attractive with RSI at 56.9 (neutral zone) despite minor decline.",
+      "confidence": 8,
+      "x_post": "[AlgoMind | 14:57 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows a clear sell signal with RSI at 65.2 (above 60 threshold) combined with a significant -2.06% price decline on high volume of 31.9M shares. This momentum...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -187,6 +198,11 @@
       "date": "2026-04-21",
       "portfolio_value": 50.17,
       "return_pct": 0.34
+    },
+    {
+      "date": "2026-04-21",
+      "portfolio_value": 50.29,
+      "return_pct": 0.58
     }
   ],
   "ai_log": [
@@ -1073,9 +1089,40 @@
         "buy",
         "tsla"
       ]
+    },
+    {
+      "timestamp": "2026-04-21T14:27:13.133176-04:00",
+      "message": "BLOCKED BUY TSLA \u2014 MAX_POSITION_PCT: existing $15.10 + $15.00 = $30.10 exceeds 30% cap ($15.07) of $50.23 portfolio",
+      "tags": [
+        "risk-blocked",
+        "tsla"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T14:57:21.768033-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T14:57:21.943282-04:00",
+      "message": "Trade posted to X: [AlgoMind | 14:57 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows a clear sell signal with RSI at 65.2 (above 60 thresho",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T14:57:21.944000-04:00",
+      "message": "AAPL shows a clear sell signal with RSI at 65.2 (above 60 threshold) combined with a significant -2.06% price decline on high volume of 31.9M shares. This momentum confirmation suggests continued weakness. With only a small $0.07 profit, it's prudent to lock in gains and redeploy capital into oversold opportunities. TSLA remains attractive with RSI at 56.9 (neutral zone) despite minor decline.",
+      "tags": [
+        "sell",
+        "aapl"
+      ]
     }
   ],
-  "last_updated": "2026-04-21T13:57:04.456677-04:00",
+  "last_updated": "2026-04-21T14:57:21.944000-04:00",
   "last_outlook_date": "2026-04-21",
   "milestones_hit": {
     "first_trade": true,
@@ -1085,5 +1132,5 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-04-21T13:57:04.456677-04:00"
+  "last_cycle_utc": "2026-04-21T14:57:21.944000-04:00"
 }
