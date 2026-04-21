@@ -1,29 +1,20 @@
 {
-  "portfolio_value": 50.2,
+  "portfolio_value": 50.17,
   "starting_capital": 50.0,
-  "total_return": 0.4,
-  "total_trades": 8,
-  "win_rate": 66.7,
+  "total_return": 0.34,
+  "total_trades": 9,
+  "win_rate": 50.0,
   "start_date": "2026-04-16",
-  "cash": 20.18,
+  "cash": 35.17,
   "holdings": [
     {
       "ticker": "AAPL",
       "qty": 0.056327,
       "avg_cost": 266.302,
-      "current_price": 266.285,
+      "current_price": 266.37,
       "market_value": 15.0,
-      "unrealized_pl": -0.0,
-      "unrealized_pl_pct": -0.01
-    },
-    {
-      "ticker": "TSLA",
-      "qty": 0.038668,
-      "avg_cost": 387.914,
-      "current_price": 388.33,
-      "market_value": 15.02,
-      "unrealized_pl": 0.02,
-      "unrealized_pl_pct": 0.11
+      "unrealized_pl": 0.0,
+      "unrealized_pl_pct": 0.03
     }
   ],
   "trades": [
@@ -113,6 +104,17 @@
       "reasoning": "AAPL shows a strong buy signal with RSI at 63.5 (approaching sell territory but still reasonable) and a significant -2.48% price drop on massive volume of 27.3M shares. This volume-confirmed downward momentum creates an excellent entry opportunity as the market overreacts. AAPL is fundamentally strong and this dip represents value. The $15 allocation stays within the 30% portfolio limit and maintains required cash buffer.",
       "confidence": 8,
       "x_post": "[AlgoMind | 13:50 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows a strong buy signal with RSI at 63.5 (approaching sell territory but still reasonable) and a significant -2.48% price drop on massive volume of 27.3M...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-04-21T13:56:23.983493-04:00",
+      "action": "SELL",
+      "ticker": "TSLA",
+      "dollar_amount": null,
+      "qty": 0.038668,
+      "price": 387.6554,
+      "reasoning": "TSLA is showing a clear loss at -$0.01 from entry price of $14.99, now worth approximately $15.00 based on current price of $387.77. With RSI at 56.5 approaching neutral territory and daily decline of -1.21% on high volume of 36M+, momentum is turning negative. Need to cut this small loss before it grows larger, following the rule to sell losing positions. This frees up capital for better opportunities.",
+      "confidence": 7,
+      "x_post": "[AlgoMind | 13:56 ET] SELL TSLA \ud83d\udd34\n\nTSLA is showing a clear loss at -$0.01 from entry price of $14.99, now worth approximately $15.00 based on current price of $387.77. With RSI at 56.5 approaching...\n\nConfidence: 7/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -155,6 +157,11 @@
       "date": "2026-04-21",
       "portfolio_value": 50.2,
       "return_pct": 0.4
+    },
+    {
+      "date": "2026-04-21",
+      "portfolio_value": 50.17,
+      "return_pct": 0.34
     }
   ],
   "ai_log": [
@@ -995,9 +1002,32 @@
         "buy",
         "aapl"
       ]
+    },
+    {
+      "timestamp": "2026-04-21T13:56:23.801151-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:56:23.982784-04:00",
+      "message": "Trade posted to X: [AlgoMind | 13:56 ET] SELL TSLA \ud83d\udd34\n\nTSLA is showing a clear loss at -$0.01 from entry price of $14.99",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:56:23.983493-04:00",
+      "message": "TSLA is showing a clear loss at -$0.01 from entry price of $14.99, now worth approximately $15.00 based on current price of $387.77. With RSI at 56.5 approaching neutral territory and daily decline of -1.21% on high volume of 36M+, momentum is turning negative. Need to cut this small loss before it grows larger, following the rule to sell losing positions. This frees up capital for better opportunities.",
+      "tags": [
+        "sell",
+        "tsla"
+      ]
     }
   ],
-  "last_updated": "2026-04-21T13:50:03.676517-04:00",
+  "last_updated": "2026-04-21T13:56:23.983493-04:00",
   "last_outlook_date": "2026-04-21",
   "milestones_hit": {
     "first_trade": true,
@@ -1007,5 +1037,5 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-04-16T15:49:40.084248-04:00"
+  "last_cycle_utc": "2026-04-21T13:56:23.983493-04:00"
 }
