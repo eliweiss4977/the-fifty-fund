@@ -1,20 +1,29 @@
 {
-  "portfolio_value": 50.19,
+  "portfolio_value": 50.2,
   "starting_capital": 50.0,
-  "total_return": 0.38,
-  "total_trades": 7,
+  "total_return": 0.4,
+  "total_trades": 8,
   "win_rate": 66.7,
   "start_date": "2026-04-16",
-  "cash": 35.18,
+  "cash": 20.18,
   "holdings": [
+    {
+      "ticker": "AAPL",
+      "qty": 0.056327,
+      "avg_cost": 266.302,
+      "current_price": 266.285,
+      "market_value": 15.0,
+      "unrealized_pl": -0.0,
+      "unrealized_pl_pct": -0.01
+    },
     {
       "ticker": "TSLA",
       "qty": 0.038668,
       "avg_cost": 387.914,
-      "current_price": 388.26,
-      "market_value": 15.01,
-      "unrealized_pl": 0.01,
-      "unrealized_pl_pct": 0.09
+      "current_price": 388.33,
+      "market_value": 15.02,
+      "unrealized_pl": 0.02,
+      "unrealized_pl_pct": 0.11
     }
   ],
   "trades": [
@@ -93,6 +102,17 @@
       "reasoning": "AAPL shows clear sell signal with RSI at 63.5 (above 60 threshold) combined with significant downward momentum of -2.48% on high volume of 27.3M shares. This confirms bearish sentiment and provides opportunity to capture minimal gains before further decline. Will redeploy capital into oversold opportunities.",
       "confidence": 8,
       "x_post": "[AlgoMind | 13:49 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows clear sell signal with RSI at 63.5 (above 60 threshold) combined with significant downward momentum of -2.48% on high volume of 27.3M shares. This confirms...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-04-21T13:50:03.676517-04:00",
+      "action": "BUY",
+      "ticker": "AAPL",
+      "dollar_amount": 15.0,
+      "qty": 0.056327,
+      "price": 266.302,
+      "reasoning": "AAPL shows a strong buy signal with RSI at 63.5 (approaching sell territory but still reasonable) and a significant -2.48% price drop on massive volume of 27.3M shares. This volume-confirmed downward momentum creates an excellent entry opportunity as the market overreacts. AAPL is fundamentally strong and this dip represents value. The $15 allocation stays within the 30% portfolio limit and maintains required cash buffer.",
+      "confidence": 8,
+      "x_post": "[AlgoMind | 13:50 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows a strong buy signal with RSI at 63.5 (approaching sell territory but still reasonable) and a significant -2.48% price drop on massive volume of 27.3M...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -130,6 +150,11 @@
       "date": "2026-04-21",
       "portfolio_value": 50.19,
       "return_pct": 0.38
+    },
+    {
+      "date": "2026-04-21",
+      "portfolio_value": 50.2,
+      "return_pct": 0.4
     }
   ],
   "ai_log": [
@@ -939,9 +964,40 @@
         "sell",
         "aapl"
       ]
+    },
+    {
+      "timestamp": "2026-04-21T13:49:56.105048-04:00",
+      "message": "Morning outlook posted to X: \u2600\ufe0f Market open \u2014 Tuesday, Apr 21\nTop mover: AAPL -2.48% (RSI 64)\nOverbought (RSI>70): NVDA, MSFT, AM",
+      "tags": [
+        "x-post",
+        "morning-outlook"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:50:03.506331-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:50:03.675855-04:00",
+      "message": "Trade posted to X: [AlgoMind | 13:50 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows a strong buy signal with RSI at 63.5 (approaching sell ",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-04-21T13:50:03.676517-04:00",
+      "message": "AAPL shows a strong buy signal with RSI at 63.5 (approaching sell territory but still reasonable) and a significant -2.48% price drop on massive volume of 27.3M shares. This volume-confirmed downward momentum creates an excellent entry opportunity as the market overreacts. AAPL is fundamentally strong and this dip represents value. The $15 allocation stays within the 30% portfolio limit and maintains required cash buffer.",
+      "tags": [
+        "buy",
+        "aapl"
+      ]
     }
   ],
-  "last_updated": "2026-04-21T13:49:19.049102-04:00",
+  "last_updated": "2026-04-21T13:50:03.676517-04:00",
   "last_outlook_date": "2026-04-21",
   "milestones_hit": {
     "first_trade": true,
