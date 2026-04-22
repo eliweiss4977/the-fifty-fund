@@ -712,6 +712,41 @@
     }
   }
 
+  /* ── Heartbeat Dot ── */
+  @keyframes heartbeat-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.55); opacity: 0.45; }
+  }
+
+  .heartbeat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .heartbeat-dot.online {
+    background: #00FF41;
+    box-shadow: 0 0 8px #00FF41;
+    animation: heartbeat-pulse 2s ease-in-out infinite;
+  }
+
+  .heartbeat-dot.delayed {
+    background: var(--yellow);
+    box-shadow: 0 0 6px var(--yellow);
+  }
+
+  .heartbeat-dot.offline {
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+  }
+
+  #heartbeatTime {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .header { padding: 16px 20px; }
@@ -724,6 +759,7 @@
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .feedback-btn span { display: none; }
     .feedback-btn { padding: 12px; }
+    #heartbeatTime { display: none; }
   }
 </style>
 </head>
@@ -741,6 +777,11 @@
   <div class="header-status">
     <a href="https://arena.fiftyfund.ai" style="color: #00cc33; text-decoration: none; font-size: 12px; opacity: 0.7; margin-left: 12px;">Arena &rarr;</a>
     <a href="https://thefiftyfund.substack.com" target="_blank" style="padding:8px 16px;border:1px solid var(--border-green);border-radius:6px;color:var(--green);font-size:11px;text-decoration:none;letter-spacing:1px;transition:all 0.2s" onmouseover="this.style.background='rgba(0,255,65,0.08)'" onmouseout="this.style.background='none'">SUBSCRIBE</a>
+    <div class="status-badge" id="heartbeatBadge" style="gap:6px">
+      <div class="heartbeat-dot offline" id="heartbeatDot"></div>
+      <span id="heartbeatStatus" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">...</span>
+      <span id="heartbeatTime"></span>
+    </div>
     <div class="status-badge">
       <div class="status-dot" id="statusDot"></div>
       <span id="statusText">Market Closed</span>
@@ -1226,6 +1267,34 @@
         const tags=(entry.tags||[]).map(tag=>`<span class="log-tag">${tag}</span>`).join('');
         return `<div class="log-entry"><div class="log-timestamp">${tsd}</div><div class="log-message">${entry.message||''}</div>${tags}</div>`;
       }).join('');
+    }
+
+    // 4b. HEARTBEAT DOT
+    const hDot    = document.getElementById('heartbeatDot');
+    const hStatus = document.getElementById('heartbeatStatus');
+    const hTime   = document.getElementById('heartbeatTime');
+    const lastEntry = logs.length ? logs[logs.length - 1] : null;
+    if (lastEntry?.timestamp) {
+      const diffMin = Math.round((Date.now() - new Date(lastEntry.timestamp).getTime()) / 60000);
+      hTime.textContent = 'Last cycle: ' + (diffMin < 1 ? '<1' : diffMin) + ' min ago';
+      if (diffMin < 35) {
+        hDot.className = 'heartbeat-dot online';
+        hStatus.textContent = 'Online';
+        hStatus.style.color = 'var(--green)';
+      } else if (diffMin < 60) {
+        hDot.className = 'heartbeat-dot delayed';
+        hStatus.textContent = 'Delayed';
+        hStatus.style.color = 'var(--yellow)';
+      } else {
+        hDot.className = 'heartbeat-dot offline';
+        hStatus.textContent = 'Offline';
+        hStatus.style.color = 'var(--red)';
+      }
+    } else {
+      hDot.className = 'heartbeat-dot offline';
+      hStatus.textContent = 'Offline';
+      hStatus.style.color = 'var(--red)';
+      hTime.textContent = '';
     }
 
     // 5. CHART
