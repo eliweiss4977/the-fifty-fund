@@ -238,9 +238,13 @@ def ask_claude(market_data: dict, portfolio: dict) -> dict:
         for sym, d in market_data.items()
     ]
 
+    pv_total = float(portfolio.get("portfolio_value") or 0) or 1.0
+    # Dynamic position cap: 50% for portfolios under $200, 30% otherwise
+    effective_cap_pct = 0.50 if pv_total < 200.0 else MAX_POSITION_PCT
+
     position_lines = [
         f"  {sym}: {p['qty']:.4f} shares @ ${p['market_value']:.2f} "
-        f"(P&L: ${p['unrealized_pl']:+.2f})"
+        f"({p['market_value'] / pv_total * 100:.1f}% of portfolio, P&L: ${p['unrealized_pl']:+.2f})"
         for sym, p in portfolio["positions"].items()
     ] or ["  (no open positions)"]
 
@@ -260,13 +264,13 @@ MARKET SNAPSHOT  (30-day data, RSI-14, 1-day change)
 DECISION RULES
 - RSI < 40 = buy signal. RSI > 60 = sell signal. One clear signal is enough to act.
 - Any price move > 0.5% with volume confirms momentum — trade it.
-- Never allocate more than {int(MAX_POSITION_PCT * 100)}% of total portfolio value to a single ticker.
+- Never allocate more than {int(effective_cap_pct * 100)}% of total portfolio value to a single ticker.
 - Always maintain at least ${CASH_BUFFER:.2f} cash buffer.
 - You MUST make 1-2 trades per day minimum. HOLDing all day = failing your mandate.
 - Sell losing positions down > 2% from entry. Cut losses fast.
 - This is a real $50 portfolio — be aggressive but disciplined.
-- IMPORTANT: Check open positions above. If a ticker is already near the 30% cap, do NOT buy more of it. Pick a different ticker or HOLD.
-- IMPORTANT: Do NOT suggest the same ticker as an existing maxed position. Diversify.
+- IMPORTANT: Check the % of portfolio shown next to each position above. Do NOT buy a ticker that is already at or near the {int(effective_cap_pct * 100)}% cap. Pick a different ticker or HOLD.
+- IMPORTANT: Do NOT suggest buying a ticker you already hold if that position is above 25% of portfolio. Pick a different ticker or HOLD.
 Respond ONLY with valid JSON — no markdown fences, no extra text outside the JSON object.
 
 REQUIRED RESPONSE FORMAT
@@ -280,7 +284,7 @@ REQUIRED RESPONSE FORMAT
   "market_summary": "<one sentence on overall market conditions today>"
 }}"""
 
-    max_usd = round(portfolio['portfolio_value'] * MAX_POSITION_PCT, 2)
+    max_usd = round(pv_total * effective_cap_pct, 2)
     prompt += f"\n\nMax dollar_amount allowed for any single BUY: ${max_usd:.2f}"
 
     response = claude.messages.create(
