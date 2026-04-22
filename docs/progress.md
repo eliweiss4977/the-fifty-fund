@@ -361,6 +361,31 @@ The ledger is operational data, not source code. Committing it would add noise t
 
 ---
 
+## April 22, 2026 — Dashboard Vercel API Migration
+
+### Live Portfolio Data via Vercel API
+
+| File | Description | Status |
+|------|-------------|--------|
+| `docs/index.html` | Performance tab + Holdings tab now pull live data from Vercel API | ✅ Shipped |
+
+**Data sources after this change:**
+
+| Source | Data |
+|--------|------|
+| `https://the-fifty-fund-api.vercel.app/api/portfolio` | `portfolio_value`, `cash`, `buying_power`, `positions` |
+| `docs/data.json` | `trades`, `ai_log`, `performance_history`, `total_trades`, `win_rate` |
+
+**Changes:**
+- `loadData()` now keeps live portfolio figures and positions strictly separate from historical data.json fields
+- Holdings table handles both Vercel API shape (`symbol`, `avg_entry_price`) and legacy data.json shape (`ticker`, `avg_cost`) — `unrealized_pl_pct` computed from available fields
+- `buying_power` shown as sub-stat under Portfolio Value
+- `● LIVE` badge appears on Portfolio Value label and Holdings section header when API responds successfully
+- Graceful fallback to data.json values if Vercel API is down
+- Refreshes every 60 seconds (unchanged)
+
+---
+
 ## Upcoming Sessions
 
 ### Session 2 (planned)
