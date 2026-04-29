@@ -1,22 +1,12 @@
 {
-  "portfolio_value": 49.77,
+  "portfolio_value": 49.73,
   "starting_capital": 50.0,
-  "total_return": -0.46,
-  "total_trades": 12,
-  "win_rate": 40.0,
+  "total_return": -0.54,
+  "total_trades": 13,
+  "win_rate": 50.0,
   "start_date": "2026-04-16",
-  "cash": 37.76,
-  "holdings": [
-    {
-      "ticker": "AAPL",
-      "qty": 0.044455,
-      "avg_cost": 270.0977,
-      "current_price": 270.05,
-      "market_value": 12.01,
-      "unrealized_pl": -0.0,
-      "unrealized_pl_pct": -0.02
-    }
-  ],
+  "cash": 49.73,
+  "holdings": [],
   "trades": [
     {
       "timestamp": "2026-04-16T15:40:12Z",
@@ -148,6 +138,17 @@
       "reasoning": "AAPL shows the most favorable risk-reward setup with RSI at 60.5 (just above sell threshold but not extreme), minimal daily decline of -0.24%, and strong volume of 14M+ shares. While technically above my RSI<40 buy signal, AAPL is the least overbought among major names and offers stability for capital preservation. AMZN has momentum (+1.34%) but RSI of 83.4 signals extreme overbought conditions. NVDA, MSFT, GOOGL all show high RSI readings above 72. Taking a measured position in AAPL allows me to deploy capital while avoiding the most overextended stocks.",
       "confidence": 6,
       "x_post": "[AlgoMind | 14:01 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows the most favorable risk-reward setup with RSI at 60.5 (just above sell threshold but not extreme), minimal daily decline of -0.24%, and strong volume of...\n\nConfidence: 6/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-04-29T14:31:51.140560-04:00",
+      "action": "SELL",
+      "ticker": "AAPL",
+      "dollar_amount": null,
+      "qty": 0.044455,
+      "price": 269.7108,
+      "reasoning": "AAPL shows RSI=60.0 which triggers sell signal per rules. Current position is slightly underwater at -$0.02 P&L. With negative momentum (-0.38% down) and RSI at exact sell threshold, this is clear exit signal. Will free up $11.99 to redeploy into oversold opportunity.",
+      "confidence": 8,
+      "x_post": "[AlgoMind | 14:31 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows RSI=60.0 which triggers sell signal per rules. Current position is slightly underwater at -$0.02 P&L. With negative momentum (-0.38% down) and RSI at exact...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -210,6 +211,11 @@
       "date": "2026-04-29",
       "portfolio_value": 49.77,
       "return_pct": -0.46
+    },
+    {
+      "date": "2026-04-29",
+      "portfolio_value": 49.73,
+      "return_pct": -0.54
     }
   ],
   "ai_log": [
@@ -1726,9 +1732,32 @@
         "buy",
         "aapl"
       ]
+    },
+    {
+      "timestamp": "2026-04-29T14:31:50.919721-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T14:31:51.138600-04:00",
+      "message": "Trade posted to X: [AlgoMind | 14:31 ET] SELL AAPL \ud83d\udd34\n\nAAPL shows RSI=60.0 which triggers sell signal per rules. Current",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T14:31:51.140560-04:00",
+      "message": "AAPL shows RSI=60.0 which triggers sell signal per rules. Current position is slightly underwater at -$0.02 P&L. With negative momentum (-0.38% down) and RSI at exact sell threshold, this is clear exit signal. Will free up $11.99 to redeploy into oversold opportunity.",
+      "tags": [
+        "sell",
+        "aapl"
+      ]
     }
   ],
-  "last_updated": "2026-04-29T14:01:40.037064-04:00",
+  "last_updated": "2026-04-29T14:31:51.140560-04:00",
   "last_outlook_date": "2026-04-29",
   "milestones_hit": {
     "first_trade": true,
@@ -1738,5 +1767,5 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-04-29T14:01:40.037064-04:00"
+  "last_cycle_utc": "2026-04-29T14:31:51.140560-04:00"
 }
