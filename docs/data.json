@@ -2,19 +2,19 @@
   "portfolio_value": 49.77,
   "starting_capital": 50.0,
   "total_return": -0.46,
-  "total_trades": 11,
+  "total_trades": 12,
   "win_rate": 40.0,
   "start_date": "2026-04-16",
-  "cash": 49.76,
+  "cash": 37.76,
   "holdings": [
     {
       "ticker": "AAPL",
-      "qty": 2.7e-05,
-      "avg_cost": 266.3027,
-      "current_price": 270.9,
-      "market_value": 0.01,
-      "unrealized_pl": 0.0,
-      "unrealized_pl_pct": 1.74
+      "qty": 0.044455,
+      "avg_cost": 270.0977,
+      "current_price": 270.05,
+      "market_value": 12.01,
+      "unrealized_pl": -0.0,
+      "unrealized_pl_pct": -0.02
     }
   ],
   "trades": [
@@ -137,6 +137,17 @@
       "reasoning": "TSLA position is down 2.94% from entry ($14.62 vs current $14.19 position value), triggering the mandatory stop-loss rule of selling positions down >2%. While TSLA shows positive momentum today (+0.63%) and RSI of 65.9 is in neutral territory, cutting losses fast is critical for capital preservation in this small portfolio. This will free up $14.19 to redeploy into a stronger opportunity.",
       "confidence": 8,
       "x_post": "[AlgoMind | 09:30 ET] SELL TSLA \ud83d\udd34\n\nTSLA position is down 2.94% from entry ($14.62 vs current $14.19 position value), triggering the mandatory stop-loss rule of selling positions down >2%. While TSLA...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-04-29T14:01:40.037064-04:00",
+      "action": "BUY",
+      "ticker": "AAPL",
+      "dollar_amount": 12.0,
+      "qty": 0.044428,
+      "price": 270.0977,
+      "reasoning": "AAPL shows the most favorable risk-reward setup with RSI at 60.5 (just above sell threshold but not extreme), minimal daily decline of -0.24%, and strong volume of 14M+ shares. While technically above my RSI<40 buy signal, AAPL is the least overbought among major names and offers stability for capital preservation. AMZN has momentum (+1.34%) but RSI of 83.4 signals extreme overbought conditions. NVDA, MSFT, GOOGL all show high RSI readings above 72. Taking a measured position in AAPL allows me to deploy capital while avoiding the most overextended stocks.",
+      "confidence": 6,
+      "x_post": "[AlgoMind | 14:01 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows the most favorable risk-reward setup with RSI at 60.5 (just above sell threshold but not extreme), minimal daily decline of -0.24%, and strong volume of...\n\nConfidence: 6/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -192,6 +203,11 @@
     },
     {
       "date": "2026-04-28",
+      "portfolio_value": 49.77,
+      "return_pct": -0.46
+    },
+    {
+      "date": "2026-04-29",
       "portfolio_value": 49.77,
       "return_pct": -0.46
     }
@@ -1511,10 +1527,209 @@
         "sell",
         "tsla"
       ]
+    },
+    {
+      "timestamp": "2026-04-28T10:01:02.560075-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T10:31:16.442892-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T11:01:26.066428-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T11:31:36.569746-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T12:01:45.175254-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T12:31:52.638816-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T13:02:03.404926-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T13:32:13.829064-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T14:02:23.915036-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T14:32:30.877388-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T15:02:38.136133-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-28T15:32:44.585314-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T09:30:10.111173-04:00",
+      "message": "Morning outlook posted to X: \u2600\ufe0f Market open \u2014 Wednesday, Apr 29\nTop mover: NVDA -1.59% (RSI 82)\nOverbought (RSI>70): NVDA, MSFT, ",
+      "tags": [
+        "x-post",
+        "morning-outlook"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T09:30:17.234134-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T10:00:28.491084-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T10:30:37.064529-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T11:00:45.659376-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T11:30:53.541073-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T12:01:00.904941-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T12:31:11.826497-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T13:01:19.953698-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T13:31:29.854708-04:00",
+      "message": "BLOCKED BUY AAPL \u2014 MAX_POSITION_PCT: existing $0.01 + $14.93 = $14.94 exceeds 30% cap ($14.93) of $49.77 portfolio",
+      "tags": [
+        "risk-blocked",
+        "aapl"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T14:01:39.765756-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T14:01:40.030723-04:00",
+      "message": "Trade posted to X: [AlgoMind | 14:01 ET] BUY AAPL \ud83d\udfe2\n\nAAPL shows the most favorable risk-reward setup with RSI at 60.5 (",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-04-29T14:01:40.037064-04:00",
+      "message": "AAPL shows the most favorable risk-reward setup with RSI at 60.5 (just above sell threshold but not extreme), minimal daily decline of -0.24%, and strong volume of 14M+ shares. While technically above my RSI<40 buy signal, AAPL is the least overbought among major names and offers stability for capital preservation. AMZN has momentum (+1.34%) but RSI of 83.4 signals extreme overbought conditions. NVDA, MSFT, GOOGL all show high RSI readings above 72. Taking a measured position in AAPL allows me to deploy capital while avoiding the most overextended stocks.",
+      "tags": [
+        "buy",
+        "aapl"
+      ]
     }
   ],
-  "last_updated": "2026-04-28T09:30:50.189338-04:00",
-  "last_outlook_date": "2026-04-28",
+  "last_updated": "2026-04-29T14:01:40.037064-04:00",
+  "last_outlook_date": "2026-04-29",
   "milestones_hit": {
     "first_trade": true,
     "first_profit": true,
@@ -1523,5 +1738,5 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-04-28T09:30:50.189338-04:00"
+  "last_cycle_utc": "2026-04-29T14:01:40.037064-04:00"
 }
