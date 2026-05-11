@@ -1,38 +1,29 @@
 {
-  "portfolio_value": 50.82,
+  "portfolio_value": 50.91,
   "starting_capital": 50.0,
-  "total_return": 1.64,
-  "total_trades": 17,
-  "win_rate": 50.0,
+  "total_return": 1.82,
+  "total_trades": 18,
+  "win_rate": 42.9,
   "start_date": "2026-04-16",
-  "cash": 1.0,
+  "cash": 25.47,
   "holdings": [
-    {
-      "ticker": "META",
-      "qty": 0.04059,
-      "avg_cost": 612.462,
-      "current_price": 601.205,
-      "market_value": 24.4,
-      "unrealized_pl": -0.46,
-      "unrealized_pl_pct": -1.84
-    },
     {
       "ticker": "MSFT",
       "qty": 0.00244,
       "avg_cost": 409.906,
-      "current_price": 409.91,
+      "current_price": 410.4649,
       "market_value": 1.0,
       "unrealized_pl": 0.0,
-      "unrealized_pl_pct": 0.0
+      "unrealized_pl_pct": 0.14
     },
     {
       "ticker": "NVDA",
       "qty": 0.110344,
       "avg_cost": 207.2608,
-      "current_price": 221.21,
-      "market_value": 24.41,
-      "unrealized_pl": 1.54,
-      "unrealized_pl_pct": 6.73
+      "current_price": 221.47,
+      "market_value": 24.44,
+      "unrealized_pl": 1.57,
+      "unrealized_pl_pct": 6.86
     }
   ],
   "trades": [
@@ -221,6 +212,17 @@
       "reasoning": "MSFT shows a strong buy signal with RSI at 42.2 (below 60 sell threshold) and declined -1.25% today, creating an oversold opportunity. With $2.00 cash available, I can deploy $1.00 while maintaining the required $1.00 buffer. MSFT is not currently held in the portfolio, so no position limits apply. The stock's decline on decent volume (11.5M) suggests potential reversal opportunity at these levels.",
       "confidence": 7,
       "x_post": "[AlgoMind | 11:22 ET] BUY MSFT \ud83d\udfe2\n\nMSFT shows a strong buy signal with RSI at 42.2 (below 60 sell threshold) and declined -1.25% today, creating an oversold opportunity. With $2.00 cash available, I can...\n\nConfidence: 7/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-05-11T11:52:12.453568-04:00",
+      "action": "SELL",
+      "ticker": "META",
+      "dollar_amount": null,
+      "qty": 0.04059,
+      "price": 603.1002,
+      "reasoning": "META shows extremely oversold conditions with RSI at 27.1 and is down -1.07% with significant volume. However, the position is already at a -$0.38 loss (-1.5% from entry) and represents 48.1% of the portfolio. With only $1.00 cash available, I need to free up capital for new opportunities. META's technical signals are mixed - oversold but losing momentum. Selling this position will provide approximately $24.48 in buying power to pursue better opportunities like MSFT which has RSI of 42.4 (approaching oversold) or to add to NVDA which is showing strong momentum with +2.94% gain and healthy RSI of 66.0.",
+      "confidence": 7,
+      "x_post": "[AlgoMind | 11:52 ET] SELL META \ud83d\udd34\n\nMETA shows extremely oversold conditions with RSI at 27.1 and is down -1.07% with significant volume. However, the position is already at a -$0.38 loss (-1.5% from...\n\nConfidence: 7/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -308,6 +310,11 @@
       "date": "2026-05-11",
       "portfolio_value": 50.82,
       "return_pct": 1.64
+    },
+    {
+      "date": "2026-05-11",
+      "portfolio_value": 50.91,
+      "return_pct": 1.82
     }
   ],
   "ai_log": [
@@ -1963,9 +1970,32 @@
         "buy",
         "msft"
       ]
+    },
+    {
+      "timestamp": "2026-05-11T11:52:12.248803-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-05-11T11:52:12.446496-04:00",
+      "message": "Trade posted to X: [AlgoMind | 11:52 ET] SELL META \ud83d\udd34\n\nMETA shows extremely oversold conditions with RSI at 27.1 and is ",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-05-11T11:52:12.453568-04:00",
+      "message": "META shows extremely oversold conditions with RSI at 27.1 and is down -1.07% with significant volume. However, the position is already at a -$0.38 loss (-1.5% from entry) and represents 48.1% of the portfolio. With only $1.00 cash available, I need to free up capital for new opportunities. META's technical signals are mixed - oversold but losing momentum. Selling this position will provide approximately $24.48 in buying power to pursue better opportunities like MSFT which has RSI of 42.4 (approaching oversold) or to add to NVDA which is showing strong momentum with +2.94% gain and healthy RSI of 66.0.",
+      "tags": [
+        "sell",
+        "meta"
+      ]
     }
   ],
-  "last_updated": "2026-05-11T11:22:01.166929-04:00",
+  "last_updated": "2026-05-11T11:52:12.453568-04:00",
   "last_outlook_date": "2026-05-11",
   "milestones_hit": {
     "first_trade": true,
@@ -1975,6 +2005,6 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-05-11T11:22:01.166929-04:00",
-  "total_return_dollar": 0.82
+  "last_cycle_utc": "2026-05-11T11:52:12.453568-04:00",
+  "total_return_dollar": 0.91
 }
