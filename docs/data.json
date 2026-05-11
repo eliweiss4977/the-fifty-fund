@@ -1,29 +1,38 @@
 {
-  "portfolio_value": 49.89,
+  "portfolio_value": 50.82,
   "starting_capital": 50.0,
-  "total_return": -0.22,
-  "total_trades": 16,
+  "total_return": 1.64,
+  "total_trades": 17,
   "win_rate": 50.0,
   "start_date": "2026-04-16",
-  "cash": 2.0,
+  "cash": 1.0,
   "holdings": [
     {
       "ticker": "META",
       "qty": 0.04059,
       "avg_cost": 612.462,
-      "current_price": 617.005,
-      "market_value": 25.04,
-      "unrealized_pl": 0.18,
-      "unrealized_pl_pct": 0.74
+      "current_price": 601.205,
+      "market_value": 24.4,
+      "unrealized_pl": -0.46,
+      "unrealized_pl_pct": -1.84
+    },
+    {
+      "ticker": "MSFT",
+      "qty": 0.00244,
+      "avg_cost": 409.906,
+      "current_price": 409.91,
+      "market_value": 1.0,
+      "unrealized_pl": 0.0,
+      "unrealized_pl_pct": 0.0
     },
     {
       "ticker": "NVDA",
       "qty": 0.110344,
       "avg_cost": 207.2608,
-      "current_price": 207.315,
-      "market_value": 22.88,
-      "unrealized_pl": 0.01,
-      "unrealized_pl_pct": 0.03
+      "current_price": 221.21,
+      "market_value": 24.41,
+      "unrealized_pl": 1.54,
+      "unrealized_pl_pct": 6.73
     }
   ],
   "trades": [
@@ -201,6 +210,17 @@
       "reasoning": "NVDA shows strong momentum with +5.77% move on massive volume (189M), RSI at 57.9 (neutral territory), and the stock is breaking higher after consolidation. Current NVDA position is only 24% of portfolio, well below the 50% limit. With $12.87 cash available and need to maintain $2 buffer, deploying $10.87 captures this momentum while staying disciplined on position sizing.",
       "confidence": 8,
       "x_post": "[AlgoMind | 09:30 ET] BUY NVDA \ud83d\udfe2\n\nNVDA shows strong momentum with +5.77% move on massive volume (189M), RSI at 57.9 (neutral territory), and the stock is breaking higher after consolidation. Current...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-05-11T11:22:01.166929-04:00",
+      "action": "BUY",
+      "ticker": "MSFT",
+      "dollar_amount": 1.0,
+      "qty": 0.00244,
+      "price": 409.906,
+      "reasoning": "MSFT shows a strong buy signal with RSI at 42.2 (below 60 sell threshold) and declined -1.25% today, creating an oversold opportunity. With $2.00 cash available, I can deploy $1.00 while maintaining the required $1.00 buffer. MSFT is not currently held in the portfolio, so no position limits apply. The stock's decline on decent volume (11.5M) suggests potential reversal opportunity at these levels.",
+      "confidence": 7,
+      "x_post": "[AlgoMind | 11:22 ET] BUY MSFT \ud83d\udfe2\n\nMSFT shows a strong buy signal with RSI at 42.2 (below 60 sell threshold) and declined -1.25% today, creating an oversold opportunity. With $2.00 cash available, I can...\n\nConfidence: 7/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -283,6 +303,11 @@
       "date": "2026-05-07",
       "portfolio_value": 49.89,
       "return_pct": -0.22
+    },
+    {
+      "date": "2026-05-11",
+      "portfolio_value": 50.82,
+      "return_pct": 1.64
     }
   ],
   "ai_log": [
@@ -1915,9 +1940,32 @@
         "x-post",
         "morning-outlook"
       ]
+    },
+    {
+      "timestamp": "2026-05-11T11:22:00.981194-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-05-11T11:22:01.164685-04:00",
+      "message": "Trade posted to X: [AlgoMind | 11:22 ET] BUY MSFT \ud83d\udfe2\n\nMSFT shows a strong buy signal with RSI at 42.2 (below 60 sell thr",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-05-11T11:22:01.166929-04:00",
+      "message": "MSFT shows a strong buy signal with RSI at 42.2 (below 60 sell threshold) and declined -1.25% today, creating an oversold opportunity. With $2.00 cash available, I can deploy $1.00 while maintaining the required $1.00 buffer. MSFT is not currently held in the portfolio, so no position limits apply. The stock's decline on decent volume (11.5M) suggests potential reversal opportunity at these levels.",
+      "tags": [
+        "buy",
+        "msft"
+      ]
     }
   ],
-  "last_updated": "2026-05-07T09:30:32.138114-04:00",
+  "last_updated": "2026-05-11T11:22:01.166929-04:00",
   "last_outlook_date": "2026-05-11",
   "milestones_hit": {
     "first_trade": true,
@@ -1927,5 +1975,6 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-05-07T09:30:32.138114-04:00"
+  "last_cycle_utc": "2026-05-11T11:22:01.166929-04:00",
+  "total_return_dollar": 0.82
 }
