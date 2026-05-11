@@ -28,7 +28,10 @@ MAX_POSITION_PCT    = 0.50       # no single position > 50% of portfolio value (
 CASH_BUFFER         = 1.00       # always keep at least $1 cash
 MAX_TRADES_PER_DAY  = 3          # max BUY/SELL orders per UTC calendar day
 DUPLICATE_WINDOW_S  = 15 * 60    # block same-ticker re-order within 15 minutes
-MIN_ORDER_VALUE     = 1.00       # minimum dollar amount for any order
+MIN_ORDER_VALUE     = 1.00       # minimum dollar amount for any (un-clipped) order
+# Smallest BUY we'll let through *after* clipping a too-large proposal down to
+# fit the cash buffer. Below this, clipping is pointless and the order is rejected.
+MIN_TRADE_USD       = 1.00
 
 
 # ── Ledger reader ──────────────────────────────────────────────────────────────
@@ -87,16 +90,35 @@ def _rule_min_order_value(decision: dict) -> tuple[bool, str]:
 
 
 def _rule_cash_buffer(decision: dict, portfolio: dict) -> tuple[bool, str]:
+    """
+    Enforce the cash buffer. Rather than rejecting BUYs that would dip into
+    the buffer (which on a sub-$200 NAV burns whole cycles), we *clip* the
+    order size down to whatever leaves the buffer intact. Only reject when
+    the headroom is too small to bother trading.
+
+    Mutates `decision` in place: when a clip happens, `dollar_amount` is
+    reduced and a human-readable `clip_note` is attached.
+    """
     if decision["action"] != "BUY":
         return True, "ok"
     amt  = float(decision.get("dollar_amount") or 0)
     cash = float(portfolio.get("cash", 0))
-    remaining = cash - amt
-    if remaining < CASH_BUFFER:
+    headroom = round(cash - CASH_BUFFER, 2)
+    if amt <= headroom:
+        return True, "ok"
+
+    # Proposal would breach the buffer — try to clip down to fit.
+    if headroom < MIN_TRADE_USD:
         return False, (
-            f"CASH_BUFFER: ${cash:.2f} − ${amt:.2f} = ${remaining:.2f} "
-            f"< required ${CASH_BUFFER:.2f} minimum"
+            f"CASH_BUFFER: ${cash:.2f} cash − ${CASH_BUFFER:.2f} buffer "
+            f"= ${headroom:.2f} headroom < ${MIN_TRADE_USD:.2f} min trade"
         )
+    clipped = headroom
+    decision["clip_note"] = (
+        f"clipped from ${amt:.2f} to ${clipped:.2f} to preserve "
+        f"${CASH_BUFFER:.2f} buffer"
+    )
+    decision["dollar_amount"] = clipped
     return True, "ok"
 
 
@@ -255,17 +277,17 @@ def validate_trade(
 
 def _log_validated(decision: dict, passed: bool, reason: str, cycle_id: str) -> None:
     """Write a DECISION_VALIDATED event."""
+    payload = {
+        "action": (decision.get("action") or "HOLD").upper(),
+        "ticker": decision.get("ticker") or "",
+        "passed": passed,
+        "reason": reason,
+    }
+    if decision.get("clip_note"):
+        payload["clip_note"]     = decision["clip_note"]
+        payload["dollar_amount"] = decision.get("dollar_amount")
     try:
-        _ledger.log_event(
-            cycle_id,
-            _ledger.DECISION_VALIDATED,
-            {
-                "action": (decision.get("action") or "HOLD").upper(),
-                "ticker": decision.get("ticker") or "",
-                "passed": passed,
-                "reason": reason,
-            },
-        )
+        _ledger.log_event(cycle_id, _ledger.DECISION_VALIDATED, payload)
     except Exception as exc:
         logger.warning("Could not write DECISION_VALIDATED to ledger: %s", exc)
 
@@ -308,8 +330,12 @@ if __name__ == "__main__":
         ("BUY below min ($0.50)",
          {"action": "BUY", "ticker": "AAPL", "dollar_amount": 0.50},
          False),
-        ("BUY would breach cash buffer",
-         {"action": "BUY", "ticker": "AAPL", "dollar_amount": 44.50},
+        ("BUY clipped to fit buffer (passes through with clip_note)",
+         {"action": "BUY", "ticker": "AAPL", "dollar_amount": 30.00,
+          "_portfolio_override": {"cash": 20.00}},
+         True),
+        ("BUY rejected when headroom < MIN_TRADE_USD",
+         {"action": "BUY", "ticker": "AAPL", "dollar_amount": 5.00, "_portfolio_override": {"cash": 1.50}},
          False),
         ("BUY would exceed 50% position cap (small portfolio)",
          {"action": "BUY", "ticker": "NVDA", "dollar_amount": 21.00},
@@ -330,13 +356,17 @@ if __name__ == "__main__":
 
     failures = 0
     for desc, decision, expected in cases:
-        ok, reason = validate_trade(decision, portfolio, account=None, ledger_path=tmp_path, cycle_id="test")
+        override = decision.pop("_portfolio_override", None)
+        case_portfolio = {**portfolio, **override} if override else portfolio
+        ok, reason = validate_trade(decision, case_portfolio, account=None, ledger_path=tmp_path, cycle_id="test")
         status = "PASS" if ok == expected else "FAIL"
         if status == "FAIL":
             failures += 1
         print(f"  [{status}] {desc}")
         if status == "FAIL" or not ok:
             print(f"          → valid={ok}, reason={reason}")
+        if decision.get("clip_note"):
+            print(f"          → clip_note={decision['clip_note']}")
 
     # ── MAX_TRADES_PER_DAY: write 3 orders, 4th should be blocked ─────────────
     for _ in range(3):

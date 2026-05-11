@@ -65,7 +65,7 @@ TICKERS = ["AAPL", "NVDA", "MSFT", "AMZN", "META", "TSLA", "GOOGL", "SPY", "QQQ"
 
 CLAUDE_MODEL    = "claude-sonnet-4-20250514"
 STARTING_CASH   = 50.00          # reference for P&L display
-CASH_BUFFER     = 2.00           # always keep $2 in cash
+CASH_BUFFER     = 1.00           # always keep $1 in cash (kept in sync with risk_engine.CASH_BUFFER)
 MAX_POSITION_PCT = 0.30          # cap any single position at 30% of portfolio
 
 ET_ZONE = pytz.timezone("America/New_York")
@@ -248,6 +248,11 @@ def ask_claude(market_data: dict, portfolio: dict) -> dict:
         for sym, p in portfolio["positions"].items()
     ] or ["  (no open positions)"]
 
+    # Per-cycle dynamic context: how much dry powder vs. how much is locked
+    # in positions. Drives the sell-before-buy rule below.
+    cash_now      = float(portfolio.get("cash") or 0)
+    positions_now = round(pv_total - cash_now, 2)
+
     prompt = f"""You are AlgoMind — an autonomous AI trading agent managing The Fifty Fund,
 a real portfolio that started with exactly $50. Your mandate is long-term growth.
 You can buy fractional shares, so any dollar amount can be deployed.
@@ -257,6 +262,9 @@ CURRENT PORTFOLIO
   Total value    : ${portfolio['portfolio_value']:.2f}
   Open positions :
 {chr(10).join(position_lines)}
+
+BUYING POWER CHECK
+You have ${cash_now:.2f} cash and ${positions_now:.2f} in positions. If cash is below $3, you should sell your weakest position before buying anything new.
 
 MARKET SNAPSHOT  (30-day data, RSI-14, 1-day change)
 {chr(10).join(market_lines)}
@@ -269,6 +277,7 @@ DECISION RULES
 - You MUST make 1-2 trades per day minimum. HOLDing all day = failing your mandate.
 - Sell losing positions down > 2% from entry. Cut losses fast.
 - This is a real $50 portfolio — be aggressive but disciplined.
+- IMPORTANT: Before proposing a BUY, confirm that `Cash available` covers it. If cash is below $3 and you have open positions, your action must be SELL on the weakest position (largest negative P&L, or largest position with the weakest momentum), not BUY.
 - IMPORTANT: Check the % of portfolio shown next to each position above. Do NOT buy a ticker that is already at or near the {int(effective_cap_pct * 100)}% cap. Pick a different ticker or HOLD.
 - IMPORTANT: Do NOT suggest buying a ticker you already hold if that position is above 25% of portfolio. Pick a different ticker or HOLD.
 Respond ONLY with valid JSON — no markdown fences, no extra text outside the JSON object.
@@ -694,6 +703,58 @@ def append_ai_log(message: str, tags: list) -> None:
             pass
     except Exception as exc:
         logger.warning("append_ai_log failed (non-fatal): %s", exc)
+
+
+_GITHUB_DATA_JSON_URL = (
+    "https://raw.githubusercontent.com/thefiftyfund/the-fifty-fund"
+    "/main/docs/data.json"
+)
+
+
+def get_last_outlook_date() -> str | None:
+    """
+    Return the ISO date of the most recently posted morning outlook, or None.
+
+    Single source-of-truth for the morning-outlook idempotency check. Both
+    the startup guard and the per-cycle check call this so they cannot
+    diverge (which caused the May 11 double-post: startup trusted a stale
+    local data/state.json that disagreed with the per-cycle in-memory set).
+
+    Precedence:
+      1. GitHub raw docs/data.json — authoritative across deploys
+      2. Local docs/data.json — write-through cache the agent itself maintains
+      3. Local data/state.json — last-resort cache; never the source of truth
+    """
+    try:
+        with urllib.request.urlopen(_GITHUB_DATA_JSON_URL, timeout=5) as r:
+            remote = json.loads(r.read())
+        d = remote.get("last_outlook_date")
+        if d:
+            return d
+    except Exception as exc:
+        logger.debug("get_last_outlook_date: GitHub fetch failed: %s", exc)
+
+    try:
+        if os.path.exists(_DATA_JSON_PATH):
+            with open(_DATA_JSON_PATH) as fh:
+                local = json.load(fh)
+            d = local.get("last_outlook_date")
+            if d:
+                return d
+    except Exception as exc:
+        logger.debug("get_last_outlook_date: local data.json read failed: %s", exc)
+
+    try:
+        if os.path.exists(_STATE_JSON_PATH):
+            with open(_STATE_JSON_PATH) as fh:
+                st = json.load(fh)
+            d = st.get("last_outlook_date")
+            if d:
+                return d
+    except Exception as exc:
+        logger.debug("get_last_outlook_date: state.json read failed: %s", exc)
+
+    return None
 
 
 def _update_agent_state(key: str, value: str) -> None:

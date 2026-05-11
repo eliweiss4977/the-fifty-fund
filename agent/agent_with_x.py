@@ -203,6 +203,18 @@ def run_cycle() -> None:
             })
             return
 
+        # Risk engine may have clipped a too-large BUY to fit the cash buffer.
+        # Surface that clip in the AI Log so it's visible alongside the trade.
+        if decision.get("clip_note"):
+            logger.info("Trade clipped: %s", decision["clip_note"])
+            try:
+                append_ai_log(
+                    f"CLIPPED {action} {ticker} — {decision['clip_note']}",
+                    ["risk-clipped", ticker.lower() if ticker else action.lower()],
+                )
+            except Exception:
+                pass
+
         # ── 6. Execute trade ──────────────────────────────────────────────────
         result = None
         if action in ("BUY", "SELL"):
@@ -418,6 +430,23 @@ def _handle_morning_outlook(market_data: dict) -> None:
     today = date.today()
     if today in _state["morning_outlook_posted"]:
         return
+    # Defense in depth: re-check the same source-of-truth used at startup
+    # before actually posting. The in-memory set is reliable within a single
+    # process lifetime; a fresh Railway container may start with an empty
+    # set even though a prior instance posted the outlook earlier today.
+    existing = agent.get_last_outlook_date()
+    if existing:
+        try:
+            if date.fromisoformat(existing) >= today:
+                _state["morning_outlook_posted"].add(today)
+                logger.info(
+                    "Outlook already posted today per source-of-truth (%s) — skipping.",
+                    existing,
+                )
+                return
+        except Exception:
+            pass
+
     cid = ldr.generate_cycle_id()
     try:
         tweet = xp.post_morning_outlook(market_data)
@@ -435,12 +464,13 @@ def _handle_morning_outlook(market_data: dict) -> None:
         ldr.log_event(cid, ldr.ERROR, {"message": f"Morning outlook failed: {exc}"})
         logger.error("Morning outlook post failed: %s", exc)
         return
-    # Persist so redeploys don't re-post the outlook today (filesystem)
+    # Write-through cache: local state.json
     try:
         agent._update_agent_state("last_outlook_date", today.isoformat())
     except Exception:
         pass
-    # Write last_outlook_date into docs/data.json locally (no push — only trades trigger a push).
+    # Write-through cache: local docs/data.json (read by get_last_outlook_date
+    # as a fallback when GitHub is unreachable).
     try:
         with open(agent._DATA_JSON_PATH) as fh:
             _data = json.load(fh)
@@ -449,6 +479,12 @@ def _handle_morning_outlook(market_data: dict) -> None:
             json.dump(_data, fh, indent=2)
     except Exception as exc:
         logger.warning("Could not persist last_outlook_date to data.json: %s", exc)
+    # Push to GitHub so the source-of-truth has today's date — otherwise a
+    # redeploy before the first trade would re-post the outlook (May 11 bug).
+    try:
+        agent.push_dashboard_to_github(action="outlook", ticker="")
+    except Exception as exc:
+        logger.warning("Could not push outlook to GitHub: %s", exc)
 
 
 def _handle_eod(portfolio: dict) -> None:
@@ -577,47 +613,35 @@ def start() -> None:
         except Exception as exc:
             logger.warning("Could not parse last_cycle_utc from data.json: %s", exc)
 
-    if _pstate["last_outlook_date"]:
+    # ── Morning outlook: single source-of-truth via agent.get_last_outlook_date()
+    #    (replaces the prior two-step read from local state.json AND GitHub —
+    #     which could silently disagree and re-post the outlook after a redeploy)
+    outlook_date = agent.get_last_outlook_date()
+    if outlook_date:
         try:
-            _state["morning_outlook_posted"].add(
-                date.fromisoformat(_pstate["last_outlook_date"])
-            )
-            logger.info(
-                "Startup: morning outlook already posted %s — will skip today.",
-                _pstate["last_outlook_date"],
-            )
-        except Exception as exc:
-            logger.warning("Could not parse last_outlook_date: %s", exc)
-
-    # ── GitHub fallback: read last_outlook_date from docs/data.json ───────────
-    # Railway's filesystem is ephemeral; data/state.json may be gone after a
-    # redeploy. docs/data.json on GitHub is the authoritative record.
-    try:
-        url = (
-            "https://raw.githubusercontent.com/thefiftyfund/the-fifty-fund"
-            "/main/docs/data.json"
-        )
-        with urllib.request.urlopen(url, timeout=5) as r:
-            remote = json.loads(r.read())
-        outlook_date = remote.get("last_outlook_date")
-        if outlook_date:
             _state["morning_outlook_posted"].add(date.fromisoformat(outlook_date))
-            logger.info(
-                "Startup (GitHub): morning outlook already posted %s — skipping.",
-                outlook_date,
+            logger.info("Startup: morning outlook already posted %s — will skip today.", outlook_date)
+        except Exception as exc:
+            logger.warning("Could not parse last_outlook_date %r: %s", outlook_date, exc)
+
+    # ── last_cycle_utc still needs its own GitHub fallback (separate concern) ─
+    if _state["last_cycle_dt"] is None:
+        try:
+            url = (
+                "https://raw.githubusercontent.com/thefiftyfund/the-fifty-fund"
+                "/main/docs/data.json"
             )
-        last_cycle_utc = remote.get("last_cycle_utc")
-        if last_cycle_utc and _state["last_cycle_dt"] is None:
-            try:
+            with urllib.request.urlopen(url, timeout=5) as r:
+                remote = json.loads(r.read())
+            last_cycle_utc = remote.get("last_cycle_utc")
+            if last_cycle_utc:
                 last_dt = datetime.fromisoformat(last_cycle_utc)
                 if last_dt.tzinfo is None:
                     last_dt = ET_ZONE.localize(last_dt)
                 _state["last_cycle_dt"] = last_dt
                 logger.info("Startup (GitHub): last cycle was %s — restart guard active.", last_dt)
-            except Exception as exc:
-                logger.warning("Could not parse last_cycle_utc from GitHub: %s", exc)
-    except Exception as exc:
-        logger.warning("Could not fetch remote data.json: %s", exc)
+        except Exception as exc:
+            logger.warning("Could not fetch last_cycle_utc from remote data.json: %s", exc)
 
     # ── Main loop ─────────────────────────────────────────────────────────────
     while True:
