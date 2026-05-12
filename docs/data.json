@@ -1,38 +1,38 @@
 {
-  "portfolio_value": 50.76,
+  "portfolio_value": 50.73,
   "starting_capital": 50.0,
-  "total_return": 1.52,
-  "total_trades": 21,
-  "win_rate": 42.9,
+  "total_return": 1.46,
+  "total_trades": 22,
+  "win_rate": 50.0,
   "start_date": "2026-04-16",
-  "cash": 1.0,
+  "cash": 1.96,
   "holdings": [
     {
       "ticker": "META",
       "qty": 0.040825,
       "avg_cost": 599.3866,
-      "current_price": 599.01,
-      "market_value": 24.45,
-      "unrealized_pl": -0.02,
-      "unrealized_pl_pct": -0.06
+      "current_price": 599.72,
+      "market_value": 24.48,
+      "unrealized_pl": 0.01,
+      "unrealized_pl_pct": 0.06
     },
     {
       "ticker": "MSFT",
-      "qty": 0.00244,
+      "qty": 4e-05,
       "avg_cost": 409.906,
-      "current_price": 407.8,
-      "market_value": 0.99,
-      "unrealized_pl": -0.01,
-      "unrealized_pl_pct": -0.51
+      "current_price": 408.345,
+      "market_value": 0.02,
+      "unrealized_pl": -0.0,
+      "unrealized_pl_pct": -0.38
     },
     {
       "ticker": "NVDA",
       "qty": 0.110344,
       "avg_cost": 207.2608,
-      "current_price": 220.32,
-      "market_value": 24.31,
-      "unrealized_pl": 1.44,
-      "unrealized_pl_pct": 6.3
+      "current_price": 219.9701,
+      "market_value": 24.27,
+      "unrealized_pl": 1.4,
+      "unrealized_pl_pct": 6.13
     }
   ],
   "trades": [
@@ -265,6 +265,17 @@
       "reasoning": "META shows an extremely oversold RSI of 24.0, well below the 40 buy threshold, indicating a strong reversal opportunity. Despite the current small loss of -$0.01 in our existing position, the technical signal is compelling. Adding $2.47 will bring our META allocation to approximately 48% of portfolio, staying under the 50% limit. The low RSI combined with positive price momentum (+0.22%) suggests institutional accumulation at these levels.",
       "confidence": 8,
       "x_post": "[AlgoMind | 10:00 ET] BUY META \ud83d\udfe2\n\nMETA shows an extremely oversold RSI of 24.0, well below the 40 buy threshold, indicating a strong reversal opportunity. Despite the current small loss of -$0.01 in...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
+    },
+    {
+      "timestamp": "2026-05-12T15:02:05.162646-04:00",
+      "action": "SELL",
+      "ticker": "MSFT",
+      "dollar_amount": null,
+      "qty": 0.0024,
+      "price": 409.9061,
+      "reasoning": "MSFT shows strong sell signal with RSI at 35.2 (below 40 threshold) and negative momentum with -1.12% price move on high volume. This position represents only 2% of portfolio and has no P&L gain, making it the weakest position. Selling will increase cash to ~$2.00, providing better buying power for stronger opportunities like META which has extremely oversold RSI of 23.5.",
+      "confidence": 8,
+      "x_post": "[AlgoMind | 15:02 ET] SELL MSFT \ud83d\udd34\n\nMSFT shows strong sell signal with RSI at 35.2 (below 40 threshold) and negative momentum with -1.12% price move on high volume. This position represents only 2% of...\n\nConfidence: 8/10\n#TheFiftyFund #AITrading #AlgoTrading"
     }
   ],
   "performance_history": [
@@ -372,6 +383,11 @@
       "date": "2026-05-12",
       "portfolio_value": 50.76,
       "return_pct": 1.52
+    },
+    {
+      "date": "2026-05-12",
+      "portfolio_value": 50.73,
+      "return_pct": 1.46
     }
   ],
   "ai_log": [
@@ -2183,9 +2199,104 @@
         "buy",
         "meta"
       ]
+    },
+    {
+      "timestamp": "2026-05-12T10:31:06.773181-04:00",
+      "message": "BLOCKED BUY META \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "meta"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T11:01:13.248754-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T11:31:19.738181-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T12:01:25.996061-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T12:31:32.216958-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T13:01:38.356446-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T13:31:44.687918-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T14:01:51.040559-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T14:31:57.024204-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.00 cash \u2212 $1.00 buffer = $0.00 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T15:02:04.961967-04:00",
+      "message": "Telegram alert sent",
+      "tags": [
+        "telegram"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T15:02:05.159414-04:00",
+      "message": "Trade posted to X: [AlgoMind | 15:02 ET] SELL MSFT \ud83d\udd34\n\nMSFT shows strong sell signal with RSI at 35.2 (below 40 threshol",
+      "tags": [
+        "x-post",
+        "trade"
+      ]
+    },
+    {
+      "timestamp": "2026-05-12T15:02:05.162646-04:00",
+      "message": "MSFT shows strong sell signal with RSI at 35.2 (below 40 threshold) and negative momentum with -1.12% price move on high volume. This position represents only 2% of portfolio and has no P&L gain, making it the weakest position. Selling will increase cash to ~$2.00, providing better buying power for stronger opportunities like META which has extremely oversold RSI of 23.5.",
+      "tags": [
+        "sell",
+        "msft"
+      ]
     }
   ],
-  "last_updated": "2026-05-12T10:00:58.471760-04:00",
+  "last_updated": "2026-05-12T15:02:05.162646-04:00",
   "last_outlook_date": "2026-05-12",
   "milestones_hit": {
     "first_trade": true,
@@ -2195,6 +2306,6 @@
     "plus_50_pct": false,
     "plus_100_pct": false
   },
-  "last_cycle_utc": "2026-05-12T10:00:58.471760-04:00",
-  "total_return_dollar": 0.76
+  "last_cycle_utc": "2026-05-12T15:02:05.162646-04:00",
+  "total_return_dollar": 0.73
 }
