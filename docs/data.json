@@ -2422,10 +2422,122 @@
         "x-post",
         "morning-outlook"
       ]
+    },
+    {
+      "timestamp": "2026-05-14T09:30:47.133051-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T10:00:57.874416-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T10:31:08.155900-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T11:01:21.457156-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T11:31:27.616546-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T12:01:34.238389-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.96 cash \u2212 $1.00 buffer = $0.96 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T12:31:40.570668-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T13:01:47.273868-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T13:31:53.447780-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T14:02:00.770437-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T14:32:07.521697-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T15:02:17.336472-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 MIN_ORDER_VALUE: $0.96 is below the $1.00 minimum",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-14T15:32:26.590566-04:00",
+      "message": "BLOCKED BUY MSFT \u2014 CASH_BUFFER: $1.96 cash \u2212 $1.00 buffer = $0.96 headroom < $1.00 min trade",
+      "tags": [
+        "risk-blocked",
+        "msft"
+      ]
+    },
+    {
+      "timestamp": "2026-05-15T09:30:42.877389-04:00",
+      "message": "Morning outlook posted to X: \u2600\ufe0f Market open \u2014 Friday, May 15\nTop mover: NVDA +4.39% (RSI 70)\nOversold  (RSI<30): META\nOverbought ",
+      "tags": [
+        "x-post",
+        "morning-outlook"
+      ]
     }
   ],
   "last_updated": "2026-05-12T15:02:05.162646-04:00",
-  "last_outlook_date": "2026-05-14",
+  "last_outlook_date": "2026-05-15",
   "milestones_hit": {
     "first_trade": true,
     "first_profit": true,
